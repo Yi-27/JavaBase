@@ -431,12 +431,50 @@
     + 冒泡排序
 
         + ```java
-            
+            // 冒泡排序
+            int[] a = new int[]{1,9,5,7,6,3,4,8,0,5,2,0,2};
+
+          for(int i=0; i<a.length-1; i++) {
+              for(int j=0; j<a.length-1-i; j++) {
+                  if(a[j] > a[j+1]) {
+                      // 交换值
+                      int temp = a[j];
+                      a[j] = a[j+1];
+                      a[j+1] = temp;
+                  }
+              }
+              List<Integer> iList = Arrays.stream(a)
+                  .boxed()
+                  .collect(Collectors.toList());
+              System.out.println(iList);
+          }
+          List<Integer> iList = Arrays.stream(a)
+              .boxed()
+              .collect(Collectors.toList());
+          System.out.println(iList);
+          ```
+          
+        + ```
+            [1, 5, 7, 6, 3, 4, 8, 0, 5, 2, 0, 2, 9]
+            [1, 5, 6, 3, 4, 7, 0, 5, 2, 0, 2, 8, 9]
+            [1, 5, 3, 4, 6, 0, 5, 2, 0, 2, 7, 8, 9]
+            [1, 3, 4, 5, 0, 5, 2, 0, 2, 6, 7, 8, 9]
+            [1, 3, 4, 0, 5, 2, 0, 2, 5, 6, 7, 8, 9]
+            [1, 3, 0, 4, 2, 0, 2, 5, 5, 6, 7, 8, 9]
+            [1, 0, 3, 2, 0, 2, 4, 5, 5, 6, 7, 8, 9]
+            [0, 1, 2, 0, 2, 3, 4, 5, 5, 6, 7, 8, 9]
+            [0, 1, 0, 2, 2, 3, 4, 5, 5, 6, 7, 8, 9]
+            [0, 0, 1, 2, 2, 3, 4, 5, 5, 6, 7, 8, 9]
+            [0, 0, 1, 2, 2, 3, 4, 5, 5, 6, 7, 8, 9]
+            [0, 0, 1, 2, 2, 3, 4, 5, 5, 6, 7, 8, 9]
+            [0, 0, 1, 2, 2, 3, 4, 5, 5, 6, 7, 8, 9]
             ```
 
         + 
 
     + 快速排序
+
+        + 
 
 + 插入排序
 
@@ -460,3 +498,51 @@
 + 确定性
 + 可行性
 
+
+
+# Arrays工具类
+
++ java.util.Arrays类
+    + boolean equals(int[] a, int[] b)，判断两个数组是否相等
+    + void fill(int[] a, int val)，将指定值填充到数组之中
+    + void sort(int[] a)，对数组进行排序
+    + int binarySearch(int[] a, int key)，对排序后的数组进行二分法检索指定的值
+
+
+
+# 数组中的常见异常
+
++ 数组角标越界异常（就是不在数组length内）
+
+    + **ArrayIndexOutOfBoundsExcetion**
+
++ 空指针异常
+
+    + **NullPointerException**
+
+    + 情况一
+
+        + ```java
+            int[] arr1 = new int[]{123};
+            arr1 = null;
+            arr1[0]; // 空指针异常
+            ```
+
+    + 情况二
+
+        + ```java
+            int[][] arr2 = new int[4][];
+            arr2[0]; // null
+            arr2[0][0]; // 空指针异常
+            ```
+
+    + 情况三
+
+        + ```java
+            String[] arr3 = new String[]{"AA", "BB", "CC"};
+            arr3[0] = null;
+            arr3[0]; // null
+            arr3[0].toString(); // 空指针异常
+            ```
+
+        + 
