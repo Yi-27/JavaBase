@@ -785,7 +785,7 @@
 
 + 不对外暴露的私有的方法
 + 单例模式
-+ ...
++ 如果不希望类在包外被调用，可以将类设置为缺省
 
 封装性的体现，需要权限修饰符来配合
 
@@ -868,4 +868,72 @@ this可以修饰：属性、方法、构造器
 
 
 
+
+
+# Day8 2020/6/21
+
+## MVC设计模型
+
+**视图模型层：**
+
++ view.utils，相关工具类
++ view.ui，自定义view
+
+**数据模型层：**
+
++ model.bean/domain，数据对象封装
++ model.dao，数据库操作类
++ model.db，数据库
+
+**控制器层：**
+
++ controller.activity，应用界面相关
++ controller.fragment，存放fragment
++ controller.adapter，显示列表的适配器
+
++ controller.service，服务相关的
++ controller.base，抽取的基类
+
+
+
 ## import关键字
+
+导入指定包下的类、接口
+
+声明在包的声明下面
+
+可以通过XXX.*的方式，导入XXX包下的所有结构
+
+如果使用的类是本包下的，可以省略import
+
+同名包要在使用处写全包名，全类名的方式显示
+
+子包的类也需要导入 
+
+import static导入指定类或接口中的静态**结构**，不是具体的类或结构
+
++ import static java.lang.System.*;
++ 这样就可以直接 out.println();了
++ 这里的out是个静态变量
+
+```java
+String infoString = Arrays.toString(new int[]{1,2,3});
+System.out.println(infoString);
+// 快速打印数组
+```
+
+
+
+## 面向对象特征之继承性
+
+好处：
+
++ 减少了代码的冗余，提高了代码的复用性
++ 便于功能的扩展
++ 为多态性的使用，提供了前提
+
+
+
+**私有属性和方法也会被继承，但是不能直接在子类里通过 this.属性 来设置值，只能通过对应的set方法，同样get也是。**
+
+**每个类会隐式继承Object类，**在java.lang包下
