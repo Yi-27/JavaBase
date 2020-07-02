@@ -1383,7 +1383,7 @@ JDK5.0的新特性
 		// int num1 = (int)str1; 不行
 		// Integer in1 = (Integer)str1; 也不行，不存在子父类的关系
 		
-		int num2 = Integer.parseInt(str1); // 如果是123a，带字母的，会抛出NumberFormat的异常
+		int num2 = Integer.parseInt(str1); // 如果是123a，带字母的，会抛出NumberFormatException的异常
 		System.out.println(num2);
 		
 		String str2 = "true1"; 
@@ -1524,4 +1524,66 @@ public class ScoreTest {
 	
 }
 ```
+
+
+
+## 其他要注意的点：
+
+向上转型（多态）不需要用强转符，向下转型时一般需要强转符。
+
+强转时可能会报ClassCastException异常，因此在此之前用instanceof判断一下，返回true再进行向下转型
+
+在使用instanceof时，x所属的类与类A必须是子父类的关系，否则编译错误
+
+
+
+数组也算是一个类
+
+
+
+## 面试题：谈谈对多态性的理解
+
++ 实现代码的通用性
++ 举例：Object类中定义的equals()方法、JDBC使用java程序操作数据库
++ 抽象类、接口的使用肯定体现了多态性。（抽象类、接口不能实例化）
++ 多态是一个运行时行为
+
+
+
+## 其他的测试
+
+```java
+	@Test
+	public void test1() {
+		
+		String s = "abc";
+		s = null;
+		System.out.println(s); // null 这里没报空指针，
+		// 这是因为prinln()方法中 print()方法会判断是不是null
+		// 是就直接打印 "null"，不是照常输出
+		
+		System.out.println("-------------");
+		System.out.println(s.toString()); // NullPointedException
+		
+	}
+```
+
+
+
+# Day14 2020/7/3
+
+## static关键字
+
+静态的意思
+
+**用来修饰：属性、方法、代码块、内部类**
+
++ 修饰属性：静态变量
+    + 静态变量（类变量）
+        + 多个变量共享同一个静态变量，当一个对象改变静态变量的值后，别的对象调用获取该静态变量的值已经是改变后的值了
+    + 非静态变量（实例变量）
+        + 每个对象修改非静态变量时不会影响其他对象的非静态变量
+    + **静态变量随着类的加载而加载**，可以通过 类.静态变量 的方式进行调用
+    + **静态变量的加载要早于对象的创建**
+    + 由于类只会加载一次，则静态变量在内存中也只会存在一份，**存在方法区的静态域中**
 
