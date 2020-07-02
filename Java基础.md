@@ -1108,3 +1108,420 @@ Person p = new Man(); // Man继承了Person类
     + notify()
     + notifyAll()
 + Object类只声明了空参构造器，并且所有类都会调用到这个空参构造器
+
+
+
+# Day11 2020/6/29
+
+int型和double型进行运算的时候，int型可有类型提升，提升为double
+
+这里进行运算的时候并不局限于 + ， == 也是可以的，其他也是
+
+**char a = 10; 不会报错**，应该a直接被类型提升为了 int
+
+
+
+## == 运算符
+
+若比较的是基本数据类型，则是比较两个变量保存的数据是否相等（类型可以不同）
+
+若比较的是引用数据类型变量，则是比较两个对象的地址值是否相等，即两个引用是否指向同一个对象实体
+
+
+
+## equals()方法的使用
+
++ 是方法，不是运算符
++ 只能用于引用数据类型
++ Object类中equals()的定义：
+    + public boolean equals(Object obj) {
+                return (this == obj);
+            }
+    + 这与 == 运算符是相同的，都还只是比较地址是否相同
++ 像String，Date，File、包装类等都**重写**了Object类中的equals()方法。会比较里面具体的实体内容
++ 自定义类，如果使用equals()，通常都要重写它
+  
+    
+
+
+
+# Day12 2020/6/30
+
+## 重写equals()
+
++ 先比较地址是否相同，相同就不需要往下比了
+
++ 再比较两个对象的实体内容是否相同
+
++ ```java
+    @Override
+    public boolean equals(Object obj){
+        if(this == obj){
+            return true; // 地址相同说明是引用同一个对象，直接返回true
+        }
+        if(obj instanceof 类){ // 判断可是需要的类
+            // 1. 强转成这个类
+            // 2. 比较两个对象的实体内容是否相同
+        
+        }
+    }
+    // 这手写的
+    ```
+
++ 可以通过自动生成，生成重写的equals()方法，自动生成的的代码比较的规则
+
+    + 1. == 比较地址
+        2. == 比较null
+        3. 判断是否类是同类型
+        4. 强转成被比较类对象
+        5. 比较被比较类的所有属性
+
+
+
+**重写原则**：
+
++ 对称性：x.equals(y) 和 y.equals(x) 的返回应一致
++ 自反性：x.equals(x) 必须返回true
++ 传递性：如果 x.equals(y)返回true，而且 y.equals(z)也返回true，那么z.equals(x)也应该返回true
++ 一致性：如果x.equals(y)返回是true，只要x,y值不变，多少次比较返回的都是true
++ 任何情况下，x.equals(null)，永远返回false; x.equals(和x不同类型的对象)永远返回false
++ 不能null.equals()，会报空指针异常
++ 并且**在重写时比较实体内容时，该用equals()还是要用**，以防出错
+    + 同时如果被比较的类属性中有其他的类对象，这个其他类也要重写equals()，不然就是直接是 == 运算符比较了，就会容易出错
+
+
+
+## == 和 equals的区别
+
++ == 既可以比较基本数据类型又可以比较引用数据类型。
+
+    + 基本类型就是比较值
+    + 引用类型就是比较内存地址
+    + 使用 == 时，必须保证等号两边类型一致
+
++ equals()是属于java.lang.Object类里面的方法
+
+    + 该方法没被重写，默认也是 ==
+    + 被重写后，才会根据重写的内容进行比较，一般重写后都会比较对象的实体内容
+
+    
+
+## toString()
+
++ 当输出一个对象的引用时（直接打印对象），实际上就是调用当前对象的toString()方法
+
++ ```java
+    public String toString() {
+            return getClass().getName() + "@" + Integer.toHexString(hashCode());
+    }
+    // getClass().getName()，先获取类名
+    // hashCode()，获取堆空间的存储位置，不过这个是虚拟的内存地址，因为有JVM
+    // Integer.toHexString()，转换成16进制
+    
+    // learn.Test@15db9742
+    ```
+
++ 像String、Date、File、包装类等都重写了Object类中的toString()方法，使得在调用对象的toString()时，返回“实体内容”信息
+
++ 自定义类也可以重写该方法，并自定义返回内容
+
+
+
+## 包装类（Wrapper）的使用
+
++ 针对八种基本数据类型定义的相应引用类型——包装类（封装类）
++ 使得基本类型也有类的特征
++ byte —— Byte
++ short —— Short
++ int —— Integer
++ long —— Long
++ float —— Float
++ double —— Double
++ 上面几个类有一个共同的父类，Number类
++ boolean —— Boolean
++ char —— Character
+
+
+
+## 基本类型、包装类与String类间的转换
+
+![image-20200630224705986](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20200630224705986.png)
+
+
+
+### 基本数据类型 ——> 包装类
+
+```java
+	// 基本数据类型 ————> 包装类：调用包装类的构造器
+	@Test
+	public void test1() {
+		int num1 = 10;
+//		System.out.println(num1.toString());
+		
+		Integer in1 = new Integer(num1);
+		System.out.println(in1.toString());
+		
+		Integer in2 = new Integer("123"); // 不能是 123abc
+		System.out.println(in2.toString());
+		
+		Float f1 = new Float(12.3);
+		Float f2 = new Float(12.3f);
+		Float f3 = new Float("12.3");
+		
+		Boolean b1 = new Boolean(true);
+		Boolean b2 = new Boolean("false"); // 这里源码是忽略大小写与true比较，不一样就是false
+		Boolean b3 = new Boolean("true123");
+		System.out.println(b3.toString());
+		
+	}
+	
+	
+}
+
+class Order{
+	
+	boolean isMale; // 默认值:false
+	Boolean isFemale; // 默认值:null，因为它已经是一个类了
+}
+
+```
+
+
+
+# Day13 2020/7/2
+
+## 包装类 ——> 基本数据类型
+
+```java
+	// 包装类 ————> 基本数据类型：调用包装类的xxxValue()
+	@Test
+	public void test2() {
+		Integer in1 = new Integer(24);
+		
+		int i1 = in1.intValue();
+		System.out.println(i1);
+        // 这样就可以加减乘除了，包装类是无法加减乘除的，所以要转成基本数据类型 
+		
+		Boolean boolean1 = new Boolean(false);
+		boolean b1 = boolean1.booleanValue();
+		System.out.println(b1);
+		
+		Float float1 = new Float(20.3F);
+		float f1 = float1.floatValue();
+		System.out.println(f1);
+	}
+```
+
+
+
+## 自动装箱与自动拆箱
+
+JDK5.0的新特性
+
+```java
+/**
+	 * JDK 5.0 新特性：自动装箱与自动拆箱
+	 */
+	@Test
+	public void test3() {
+		int num1 = 10;
+		
+		// 基本数据类型  ——> 包装类的对象
+		method(num1); // Object obj = num1;
+		// 这里本来基本数据类型num1是无法作为类对象传递给method方法的
+		
+		// 自动装箱：基本数据类型  ——> 包装类的对象
+		int num2 = 10;
+		Integer in1 = num2; // 不需要再使用构造器了
+		
+		boolean b1 = true;
+		Boolean b2 = b1; // 自动装箱
+		
+		
+		// 自动开箱：包装类 ——> 基本数据类型
+		System.out.println(in1.toString());
+		int num3 = in1; // 自动拆箱
+	}
+	
+	public void method(Object obj) {
+		System.out.println(obj); 
+        // println()中调用String.valueOf()，其实就是调用了对象的toString()
+	}
+```
+
+
+
+## 基本数据类型、包装类 —— > String类型
+
+```java
+	// 基本数据类型、包装类 ————> String类型：调用String重载的valueOf(Xxx xxx)
+	@Test
+	public void test4() {
+		int num1 = 10;
+		// 方式1：连接运算
+		String str1 = num1 + "";
+		// 方式2：调用String的valueOf(Xxx xxx)
+		float f1 = 12.3f;
+		String str2 = String.valueOf(f1);
+		System.out.println(str2);
+		
+		Double double1 = 20.4;
+		String str3 = String.valueOf(double1);
+		System.out.println(str3);	
+	}
+```
+
+
+
+## String类型 ——> 基本数据类型
+
+```java
+// String类型 ————> 基本数据类型、包装类：调用包装类的parseXxx()
+	@Test
+	public void test5() {
+		String str1 = "123";
+		// int num1 = (int)str1; 不行
+		// Integer in1 = (Integer)str1; 也不行，不存在子父类的关系
+		
+		int num2 = Integer.parseInt(str1); // 如果是123a，带字母的，会抛出NumberFormat的异常
+		System.out.println(num2);
+		
+		String str2 = "true1"; 
+		boolean b1 = Boolean.parseBoolean(str2); // 不是不记大小写的 true，就是false
+		System.out.println(b1);
+	}
+```
+
+
+
+## 包装类常见面试题
+
+```java
+	@Test
+	public void test6() {
+		Object o1 = true ? new Integer(1) : new Double(2.0); // 三元运算符 ：编译时要求两边类型要一致，所以这里int提升到double
+		System.out.println(o1); // 1.0
+		
+		Object o2;
+		if(true) {
+			o2 = new Integer(1); // 1
+		}else {
+			o2 = new Double(2.0);
+		}
+		
+		System.out.println(o2);
+	}
+```
+
+
+
+```java
+	@Test
+	public void test7() {
+		Integer i = new Integer(1);
+		Integer j = new Integer(1);
+		System.out.println(i == j); // false 比较的是地址
+		
+		Integer m = 1;
+		Integer n = 1;
+		System.out.println(m == n); // true
+		
+
+		Integer x = 128;
+		Integer y = 128;
+		System.out.println(x == y); // false
+		// 这是因为Integer类中有个私有静态内部类IntegerCache
+		// 有个static final Integer cache[];属性，已经提前造好 -128~+127 的整数
+		// 在使用自动装箱的方式时，给Integer赋值的范围在-128~127时，可以直接使用数组中的元素，就不用再去用了
+		// 目的就是为了提高效率
+		// 因此，这里Integer x = 128; 相当于new了个对象
+	}
+```
+
+
+
+## 包装类的小练习
+
+```java
+/**
+ * 
+ * @author Yi-27
+ * @Time:2020年7月2日 下午4:21:21
+ * @Description:
+ * 利用Vector代替数组处理，从键盘读取学生成绩（负数表示输入结束），找出最高分，并输出学生成绩等级
+ * 数组一旦创建，长度固定不变， 但是 向量类java.util.Vector可以根据需要动态伸缩
+ * 
+ * Vector v = new Vector();
+ * v.addElement(Object obj); // 向向量中添加元素
+ * Object obj = v.elementAt(0); // 按下标取出元素
+ * v.size(); // 计算向量的长度
+ * 
+ * 与最高分相差10分内 A等，20分内B等，30分内C等，其它D等
+ * 
+ */
+public class ScoreTest {
+	
+	public static void main(String[] args) {
+		// 1. 实例化Scanner，用于从键盘获取学生成绩
+		Scanner scan = new Scanner(System.in); 
+		
+		// 2. 创建Vector对象，相当于数组
+		Vector v = new Vector();
+		
+		int maxScore = 0;
+		
+		// 3. for(;;)给Vector中添加数据
+		for(;;) {
+			System.out.println("输入学生成绩（以负数代表输入结束）");
+			int score = scan.nextInt();
+			if(score < 0) {
+				break;
+			}
+			if(score > 100) {
+				System.out.println("输入的数据非法，请重新输入");
+				continue;
+			}
+			// jdk5.0之前
+//			Integer inScore = new Integer(score);
+//			v.addElement(inScore); // 多态
+			
+			// jdk5.0之后
+			v.addElement(score); // 自动装箱
+			
+			if(maxScore < score) {
+				maxScore = score;
+			}
+		}
+		// 4. 输入负数时，终止循环
+		
+		// 5. 获取学生成绩的最大值
+		
+		// 6. 遍历Vector得到每个学生的成绩，并与最大成绩比较，得到每个学生的等级
+		char level;
+		for(int i = 0; i < v.size(); i++) {
+			Object obj = v.elementAt(i);
+			
+			// jdk5.0之前
+//			Integer inScore = (Integer)obj;
+//			int score = inScore.intValue();
+			
+			// jdk5.0之后
+			int score = (int)obj; // 其实应该先拆成Integer再拆成int，但可以这样一步到位
+			
+			if(maxScore - score <= 10) {
+				level = 'A';
+			}else if(maxScore - score <= 20) {
+				level = 'B';
+			}else if(maxScore - score <= 30) {
+				level = 'C';
+			}else {
+				level = 'D';
+			}
+			System.out.println("学生-" + i + " 成绩：" + score + " 等级：" + level);
+			
+		}
+	}
+	
+}
+```
+
