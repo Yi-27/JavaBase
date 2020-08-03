@@ -1638,3 +1638,107 @@ public class ScoreTest {
 
 + 操作静态属性的方法，通常声明为static
 + 工具类中的方法，习惯上声明为static，比如Math、Arrays、Collections
+
+
+
+
+
+
+
+# Day16 2020/8/3
+
+## 单例（Singleton）设计模式
+
+对某个类**只能存在一个对象实例，**并且该类只提供一个取得其对象实例的方法。
+
+首先需要**将类的构造器的访问权限设置为private**，这样，就不能用new操作符在类的外部产生类的对象，但是在类的内部可以
+
+只能**调用该类的某个静态方法**以返回类内部创建的对象，静态方法只能访问类中的静态成员变量
+
+所以，**指向**类内部产生的**该类对象的变量也必须定义为静态的**。
+
+
+
+**饿汉式**：
+
+```java
+// 饿汉式
+class Bank{
+	
+	// 1.私有化构造器
+	private Bank() {
+		// 外部无法调用
+	}
+	
+	// 2.内部创建类的对象
+	// 4.要求次对象也必须声明为静态的
+	private static Bank instanceBank = new Bank();
+
+	// 3.提供公共的静态方法，返回类的对象
+	public static Bank getInstance() {
+		return instanceBank;
+	}
+
+}
+
+// 5.获取单例
+Bank bank1 = Bank.getInstance();
+Bank bank2 = Bank.getInstance(); // 这两个获取到的是同一个对象
+	
+```
+
+
+
+**懒汉式**
+
+```java
+// 懒汉式
+class Order{
+	
+	// 1.私有化类的构造器
+	private Order() {
+		
+	}
+	
+	// 2.声明当前类对象，没有初始化
+	// 4.此对象也必须声明为static
+	private static Order instanceOrder = null;
+	
+	// 3.声明public、static的返回当前类的对象的方法
+	public static Order getInstance() {
+		if(instanceOrder == null) { // 如果不存在才会去创建新的对象
+			instanceOrder = new Order(); // 这样也只会在第一次才创建这个对象
+		}
+		
+		return instanceOrder;
+	}
+	
+}
+
+```
+
+
+
+区别：
+
++ 懒汉式是什么时候用什么时候造，饿汉式是一开始就造好了。
++ **饿汉式是线程安全的。**
+
+
+
+单例模式的优点：
+
++ 减少了系统性能的开销
+
++ 当一个对象的产生需要比较多的资源时，如读取配置、产生其他依赖对象时，则可以通过在应用启动时直接产生一个单例对象，然后永久驻留内存的方式来解决
+
+
+
+单例模式的**应用场景：**
+
++ 网站的计数器
++ 应用程序的日志应用
++ 数据库连接池
++ 读取配置文件的类
++ Application也是单例的典型应用
++ Windows的Task manager(任务管理器)也是典型的单例模式，回收站也是
