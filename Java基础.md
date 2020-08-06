@@ -1674,6 +1674,7 @@ class Bank{
 	// 4.要求次对象也必须声明为静态的
 	private static Bank instanceBank = new Bank();
 
+    
 	// 3.提供公共的静态方法，返回类的对象
 	public static Bank getInstance() {
 		return instanceBank;
@@ -1742,6 +1743,28 @@ class Order{
 + 读取配置文件的类
 + Application也是单例的典型应用
 + Windows的Task manager(任务管理器)也是典型的单例模式，回收站也是
+
+
+
+```java
+// 还可以这样
+class Bank{
+	
+	// 1.私有化构造器
+	private Bank() {
+		// 外部无法调用
+	}
+	
+	// 2.内部创建类的对象
+	// 3.这样final修饰，外部就不能修改内部结构只能调用了
+	public static final Bank instanceBank = new Bank();
+}
+
+// 5.获取单例
+Bank bank1 = Bank.instanceBank;
+Bank bank2 = Bank.instanceBank; // 这两个获取到的是同一个对象
+
+```
 
 
 
@@ -1832,4 +1855,102 @@ final可以用来修饰的结构：类、方法、变量
 ## native关键字
 
 修饰方法时，这样的方法就没有方法体，表示接下来要调用底层的C/C++代码了
+
+
+
+
+
+# Day18 2020/8/6
+
+## final关键字
+
+final可以用来修饰的结构：类、方法、变量
+
+
+
+**修饰类：**
+
++ 不能被继承
++ 比如，String类、System类、StringBuffer类
+
+**修饰方法：**
+
++ 表明方法不可以被重写
++ 比如，Object类中的getClass()
+
+**修饰变量：**
+
++ 此时的变量就称为一个常量
++ 赋值的位置有：
+    + 显示初始化
+    + 代码块中初始化
+    + 构造器中初始化
+
+**修饰局部变量：**
+
++ 修饰形参时，表示此形参时一个常量，当调用此方法给常量形参赋值后，就只能在方法体内使用此形参，且不能修改
+
+    
+
+**static final 用来修饰属性：全局常量**
+
+**static修饰的属性都加载到方法区的静态域中**
+
+
+
+## 抽象类与抽象方法
+
+### abstract关键字
+
+abstract：抽象的
+
+可以用来修饰的结构：类、方法
+
+不能用来修饰：属性、构造器、代码块
+
+**不能用来修饰私有方法、静态方法**
+
+**修饰类：**
+
++ 不能实例化
++ 但有构造器，这是因为子类会用到
++ 开发中，抽象类不能实例化都会提供抽象类的子类，让子类对象实例化，来进行实际操作
+
+**修饰方法：**
+
++ 抽象方法只有声明，没有方法体
+
++ 包含抽象方法的类，一定是抽象类
+
++ 若子类重写了父类中的所有的抽象方法后，此子类方可实例化
+
+    + 不止直接父类的，间接父类的所有抽象方法都要重写
+
++ 若子类没有重写父类中的所有的抽象方法，则子类也是一个抽象类，需要用abstract修饰
+
+    
+
+**非匿名类匿名对象**：
+
+类似`func(new subject());`
+
+**抽象类的匿名子类对象：**
+
+```java
+		// 创建匿名子类的对象 （对象也可以有名或无名）
+		// Employee抽象类是无法实例化的
+		// 但是在后面加个大括号再重写抽象类的方法，就是该抽象类的匿名子类
+		Employee employee = new Employee() {
+			
+			@Override
+			public void work() {
+				// TODO Auto-generated method stub
+				
+			}
+		};
+```
+
+
+
+## 多态的应用：模板方法设计模式（TemplateMethod）
 
