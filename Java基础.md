@@ -2191,4 +2191,80 @@ class Person{
 + 如何在成员内部类中区分调用外部类的结构
     + 内部类的属性直接 this.属性
     + 外部类的属性 外部类名.this.属性
-+ 开发者局部内部类的手 
++ 开发中局部内部类的使用 
+
+
+
+
+
+# Day21 2020/8/9
+
+## 局部内部类事宜的注意点
+
+成员内部类和局部内部类，在编译后，都会生成字节码文件
+
+格式：
+
++ 成员内部类：外部类$内部类名.class
+
++ 局部内部类：外部类$数字 内部类名.class
+
+
+
+	 * 在局部内部类的方法中
+	 * 如果调用局部内部类所在的方法中的局部变量时
+	 * 要求此局部变量声明为final的
+	 * 
+	 * jdk7及之前版本，要求此局部变量显示声明为final的
+	 * jdk8及之后版本，可以省略final的声明
+
+
+
+
+## 异常处理
+
+两大类：
+
++ Error：Java虚拟机无法解决的严重问题
+    + 比如JVM内部错误、资源耗尽等问题
+    + 比如，stackOverflowError和OOM
+    + 一般不编写代码进行处理
++ Exception：其他因编程错误或偶然的外在因素导致的一致性问题
+    + 空指针访问
+    + 试图读取不存在的文件
+    + 网络连接中断
+    + 数组角标越界 
+    + ...
+    + 可以编写代码去处理
+
+
+
+捕获错误最理想的是在**编译期间**，但有的错误只有在**运行时**才会发生。
+
+比如：除数为0，数组下标越界等
+
++ 分类：
+    + 编译时异常
+        + 这时程序无法运行
+    + 运行时异常
+        + 程序能运行，但会报错
+
+
+
+**异常体系机构：**
+
+jang.lang.Throwable
+
++ java.lang.Error
++ jang.lang.Exception
+    + 编译时异常（checked）
+        + IOException
+            + FileNotFoundException
+        + ClassNotFoundException
+    + 运行时异常（unchecked）
+        + NullPointerException
+        + ArrayIndexOutOfBoundsException
+        + ClassCastException
+        + NumberFormatException
+        + InputMismatchException
+        + ArithmaticException
