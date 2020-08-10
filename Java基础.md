@@ -2268,3 +2268,131 @@ jang.lang.Throwable
         + NumberFormatException
         + InputMismatchException
         + ArithmaticException
+
+
+
+
+
+# Day22 2020/8/10
+
+## 异常处理
+
+ **抓抛模型：**
+
++ 过程一：“抛”
+
+    + 程序在正常执行的过程中，一旦出现异常，就会在异常代码处生成一个对应异常类的对象
+    + 并将此对象抛出
+    + 一旦抛出对象以后，其后的代码就不再执行
+
++ 过程二：“抓”
+
+    + 可以理解为异常的处理方式
+
+    + ①：try-catch-finally
+
+        + ```java
+            try{
+                // 可能出现异常的代码
+            }catch(异常类型1 变量名1){
+                // 处理异常的方式1
+            }catch(异常类型2 变量名2){
+                // 处理异常的方式2
+            }catch(异常类型3 变量名3){
+                // 处理异常的方式3
+            }
+            ...
+            finally{ // finally是可选的
+                // 最后一定会执行的代码（哪怕是try或catch中return了）
+            }
+            ```
+
+        + 使用try将可能出现异常代码包装起来，在执行过程中，一旦出现异常，就会生成一个对应异常类的对象，根据此对象类型，去catch中进行匹配
+
+        + 一旦try中的异常对象匹配到某一个catch时，就进入catch中进行异常的处理
+
+            + 一旦处理完成就跳出当前的try-catch结构（在没有写finally的情况下），继续执行后续的代码
+
+        + catch中的异常类型如果没有子父类关系，则谁声明在上，谁声明在下无所谓。
+
+            + 如果满足子父类关系，则要求子类一定声明在父类的上面。否则，报错  
+
+        + 常用的异常对象处理方式：
+
+            + ① String getMessage()
+            + ② printStackTrace()
+            + 出了try-catch就不能调用了
+
+        + 体会：
+
+            + 使用try-catch-finally处理编译时异常，是得程序在编译时就不再报错，但是运行时仍可能报错
+            + 相当于我们使用try-catch-finally将一个编译时可能出现的异常，延迟到运行时出现
+
+        + finally
+
+        + ```java
+            package day22;
+            /**
+             * 
+             * @author Yi-27
+             * @Time:2020年8月10日 下午11:45:40
+             * @Description:
+             * 
+             */
+            
+            import org.junit.Test;
+            
+            public class FinallyTest {
+            	
+            	@Test
+            	public void testMethod() {
+            		int num = test();
+            		System.out.println(num);
+            	}
+            	
+            	public int test() {
+            		try {
+            			int[] arr = new int[10];
+            			System.out.println(arr[10]);
+            			return 1;
+            		} catch (ArrayIndexOutOfBoundsException e) {
+            			// TODO: handle exception
+            			e.printStackTrace();
+            			return 2;
+            		}finally {
+            			System.out.println("这一定会被执行"); // 肯定会执行
+            			return 3; // 肯定会返回3
+            		}
+            	}
+            	
+            	
+            	
+            	
+            
+            	@Test
+            	public void test1() {
+            		try {
+            			int a = 10;
+            			int b = 0;
+            			System.out.println(a / b);
+            		}catch(ArithmeticException e) {
+            			e.printStackTrace();
+            			int[] arr = new int[10];
+            			System.out.println(arr[10]);
+            		}catch(Exception e) {
+            			e.printStackTrace();
+            		}finally { // finally是可选的
+            			System.out.println("这一定会被执行"); // 即使catch中又出现了异常
+            		}
+            	}
+            	
+            	
+            }
+            
+            ```
+
+        + 像数据库连接，输入输出流，网络编程Socket等资源，JVM是不能自动的回收的，需要自己手动的进行资源的释放。此时的资源释放，就需要声明在finally中
+
+        + try-catch-finally可以相互嵌套
+
+    + ②：throws 
