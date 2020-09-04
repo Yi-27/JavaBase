@@ -2466,3 +2466,44 @@ jang.lang.Throwable
 1. 继承于现有的异常结构：RuntimeException、Exception...
 2. 提供全局常量：serialVersionUID
 3. 提供重载的构造器 ：参数是类似String msg，并且super(msg)
+
+
+
+# Day24 2020/9/4
+
+## 重写方法异常抛出的规则
+
++ 子类重写的方法抛出的异常类型**不大于**父类被重写的方法抛出的异常
+
+
+
+## 开发中如何选择使用try-catch-finally还是使用throws
+
++ 如果父类中被重写的方法没有throws方式处理异常，则子类重写的方法也不能使用throws，意味着如果子类重写的方法中有异常，必须使用try-catch-finally方式处理。
+
++ 执行的方法a中，先后又调用了另外的几个方法，这几个方法是递进关系执行的。建议几个方法使用throws的方式进行处理。而执行的方法a可以考虑使用try-catch-finally方式进行处理
+
+
+
+关于异常的产生：
+
++ 系统自动生成异常对象
++ 手动的生产一个异常对象，并抛出（throw）
+
+
+
+## 手动抛出异常
+
+```java
+// 手动抛出异常对象
+//			throw new RuntimeException("您输入的数据非法！"); // 抛的是运行时异常
+			throw new Exception("您输入的数据非法！"); // 这时就包括了编译时异常，需要进行处理
+```
+
+
+
+## 如何自定义异常类
+
++ 继承现有的异常结构：RuntimeException、Exception
++ 提供全局常量：serialVersionUID
++ 提供重载的构造器
