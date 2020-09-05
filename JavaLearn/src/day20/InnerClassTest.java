@@ -17,7 +17,7 @@ public class InnerClassTest {
 	// 创建EE实例（非静态的成员内部类）
 	Person p = new Person(); // 不能像静态成员内部类那样创建
 	Person.EE ee = p.new EE(); // 因为静态的内部结构是随着类的加载而加载的
-	ee.work(); // 为啥不对啊！！！
+//	ee.work(); // 为啥不对啊！！！
 	
 }
 

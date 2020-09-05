@@ -2507,3 +2507,9 @@ jang.lang.Throwable
 + 继承现有的异常结构：RuntimeException、Exception
 + 提供全局常量：serialVersionUID
 + 提供重载的构造器
+
+
+
+# Day25 2020/9/5
+
+project03一半
