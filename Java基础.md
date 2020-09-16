@@ -2513,3 +2513,12 @@ jang.lang.Throwable
 # Day25 2020/9/5
 
 project03一半
+
+
+
+
+
+# Day26 2020/9/16
+
+projec另一半的二分之一
+
