@@ -110,8 +110,12 @@ public class StringTest {
         System.out.println(s5 == s7); // false
         System.out.println(s6 == s7); // false
 
-        s1 += s2;
+        s1 += s2; // 也是在堆里面创建对象来放内容（指向常量池的地址）
         System.out.println(s3 == s1); // false
+
+        // intern()返回s5对应堆空间指向常量池中的内容
+        String s8 = s5.intern(); // 返回值得到的s8使用的常量池中已经存在的“javaEEhadoop"
+        System.out.println(s3 == s8); // true
 
     }
 

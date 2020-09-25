@@ -2866,6 +2866,8 @@ Future接口
 
 ## 字符串相关的类
 
+**String为不可变的字符序列**
+
 Java程序中所有字符串字面值（如“ABC”）都作为String类的实例实现
 
 + String是一个**final类**，代表不可变的字符序列
@@ -2896,5 +2898,204 @@ String:字符串，""引起来
 
 
 + 常量与常量的拼接结果在常量池，且常量池中不会存在相同内容的常量
+    + 注意只要加了final关键字，就变成常量了，还是会在常量池内进行拼接
+    + 所谓相同内容，指的是使用String类的equals()比较，返回true
 + 只要其中有一个是变量，结果就在堆中
 + 如果拼接的结果调用intern()，返回值就在常量池中
+
+
+
+# Day29 2020/9/25
+
+## JVM中涉及到字符串的内存结构
+
+### Heap堆
+
+一个JVM实例只存在一个堆内存，堆内存的大小是可以调节的。
+
+类加载器读取了类文件后，需要把类、方法、常变量放到堆内存中，保存所有引用类型的真实信息，以方便执行器执行
+
+
+
+堆内存分为三部分：
+
++ 新生区：Young
++ 养老区：Old
++ 永久存储区：Perm
+
+
+
+在JDK 1.6 中 字符串常量池在方法区中，方法区具体实现：**永久代**
+
+在JDK 1.7中 字符串常量池在堆空间中
+
+在JDK 1.8 中 字符串常量池在方法区中，方法区具体实现：**元空间**
+
+
+
+## String常用方法
+
++ int length()
++ char charAt(int index)，返回某索引处的字符
++ boolean isEmpty()，判断是否是空字符串
++ String toLowerCase()，使用默认语言环境，将String中所有字符转换为小写
++ String toUpperCase()，使用默认语言环境，将String中所有字符转换为大写
++ String trim()，返回字符串的副本，忽略前导空白和尾部空白
++ boolean equals(Object obj)，比较字符串的内容是否相同
++ boolean equalsIgnoreCase(String anotherString)，与equals方法类似，忽略大小写
++ String concat(String str)，将指定字符串连接到此字符串的尾部，等价于用“+”
++ int compareTo(String anotherString)，比较两个字符串的大小
++ String subString(int beginIndex)，返回一个新的字符串，它是此字符串的从beginIndex开始截取到最后一个子字符串
++ String substring(int beginIndex, int endIndex)，返回一个新字符串，它是此字符串从beginIndex开始截取到endIndex(不包含)的一个子字符串
++ boolean endsWith(String suffix)，测试此字符串是否以指定的后缀结束
++ boolean startsWith(String prefix)，测试此字符串是否以指定的前缀开始
++ boolean startsWith(String prefix, int toffset)，测试此字符串从指定索引开始的子字符串是否以指定的前缀开始
++ boolean contains(CharSequence s)，当且仅当此字符串包含指定的char值序列时，返回true
++ int indexOf(String str)，返回指定字符串在此字符串中第一次出现处的索引
++ int indexOf(String str, int fromIndex)，返回指定子字符串在此字符串中第一次出现处的索引，从指定的索引开始
++ int lastIndexOf(String str)，返回指定子字符串在此字符串中最右边出现处的索引
++ int lastIndexOf(String str, int fromIndex)，返回指定子字符串在此字符串中最后一次出现处的索引，从指定的索引开始反向搜索
+    + 注indexOf和lastIndexOf方法如果未找到都是返回-1
++ String replace(char oldChar,char newChar)，返回一个新的字符串，它是通过用newChar替换此字符串中出现的所有oldchar得到的。
++ String replace(CharSequence target,CharSequence replacement)，使用指定的字面值替换序列替换此字符串所有匹配字面值目标序列的子字符串。
++ String replaceAll(String regex,String replacement)，使用给定的replacement替换此字符串所有匹配给定的正则表达式的子字符串。
++ string replaceFirst(String regex,String replacement)，使用给定的replacement替换此字符串匹配给定的正则表达式的第一个子字符串。
++ boolean matches(String regex)，慧知此字符串是否匹配给定的正则表达式
++ tringsplit(String regex)，根据给定正则表达式的匹配拆分此字符串。
++ string split(String regex，int limit)，根据匹配给定的正则表达式来拆分此字符串，最多不超过limit个，如果超过了，剩下的全部都放到最后一个元素中
+
+
+
+### String与其他结构之间转换
+
+```
+* String 与 基本数据类型、包装类之间的转换
+*      String --> 基本数据类型、包装类：调用包装类的静态方法，parseXxxx(Str)
+*      基本数据类型、包装来 --> String：调用String重载的valueOf(xxx)
+*
+* String 与 char[] 之间的转换
+*      String --> char[]： 调用String的toCharArray()
+*      char[] --> String： 调用String的构造器
+*
+* String 与 byte[] 之间的转换
+*      String --> byte[]：调用String的getBytes()
+*      byte[] --> String：调用String的构造器
+```
+
+
+
+### String 常见算法题
+
++ 获取两个字符串中最大相同子串
+    + 将短的哪个串进行长度一次递减的子串与较长的串比较
++ 对字符串中字符进行自然顺序排序
+    + 字符串变成字符数组
+    + 对数组排序，选择，冒泡，Arrays.sort()
+    + 将排序后的数组变成字符串
+
++ 模拟trim方法，去除字符串两端的空格
++ 将一个字符串进行反转。将字符串中指定部分进行反转。
++ 获取一个字符串在另一个字符串中出现的次数
+
+
+
+
+
+# StringBuffer和StringBuilder类
+
+**可变的字符序列**
+
+
+
+#### String、StringBuffer、StringBuilder三者的异同
+
++ String是不可变的字符序列，另两个事可变的
+    + 底层是使用final char[]存储的
+    + 会存在大量的字符串创建和回收，因此内存的消耗会较大
++ StringBuffer是线程安全的，但是效率低
+    + 底层是使用char[]动态存储的
++ StringBuilder是JDK5.0新增的，线程不安全的，效率高
+    + 底层是使用char[]动态存储的
+
+效率：StringBuilder > StringBuffer > String
+
+
+
+#### 源码分析
+
+```
+源码分析：
+        String str = new String(); // char[] value = new char[0];
+        String str1 = new String("abc); // char[] value = new char[]{'a', 'b', 'c'};
+
+
+        StringBuffer sb1 = new StringBuffer(); // char[] value = new char[16]; 底层创建了一个长度是16的字符数组
+        sb1.append('a'); // value[0] = 'a';
+        sb1.append('b'); // value[1] = 'b';
+
+        StringBuffer sb2 = new StringBuffer("abc"); // char[] value = new char["abc".length() + 16];
+
+        // 问题1. sout(sb2.length()); 打印
+        // 问题2. 扩容问题：如果要添加的数据顶层数组盛不下了，
+             默认情况下，扩容为原来容量的 2倍+2 ，同时将原有数组中的元素复制到新的数组中
+             特殊情况，默认扩容还不够的触发特殊情况
+
+指导意义：建议使用StringBuffer(int capacity)或StringBuilder(int capacity)
+```
+
+
+
+### StringBuffer类的常用方法
+
++ append(xxx)：用于进行字符串拼接
++ delete(int start, int end)：删除指定位置的内容
++ replace(int start, int end, String str)：把[start, end)位置替换为str
++ insert(int offset, xxx)：在指定位置插入xxx
++ reverse()：把当前字符序列逆转
+
+注：
+
++ StringBuilder类的方法与StringBuffer一样就是没同步而已
+
++ 当append和insert时，原有value数组长度不够，可扩容
+
++ 如上方法支持方法链操作
+
+    + ```java
+         @Override
+            public synchronized StringBuffer append(int i) {
+                toStringCache = null;
+                super.append(i); // 拼接字符串
+                return this; // 将原本的对象返回出去，因此可以继续 . 调用下一个方法
+            }
+        ```
+
+        
+
+## JDK 8 之前日期时间API
+
+```
+java.util.Date类
+    |--- java.sql.Date类
+
+1.两个构造器的使用
+    >构造器1：Date()：创建一个对应当前时间的Date对象
+    >构造器2：创建指定毫秒数的Date对象
+2.两个方法的使用
+    >toString()：显示当前的年、月、日、时、分、秒
+    >getTime()：获取当前Date对象对应的毫秒数。（时间戳）
+3.java.sql.Date 对应着数据库中的日期类型的变量
+    >如何实例化
+    >如何将java.util.Date对象转换为java.sql.Date对象
+    
+// 将java.util.Date对象转换为java.sql.Date对象
+// 情况一：
+Date date4 = new java.sql.Date(1601027147376L); // 子类赋给父类，多态
+java.sql.Date date5 = (java.sql.Date) date4; // 再强转成sql.Date
+// 情况二：
+Date date6 = new Date(); // 这里new的就是父类对象，没办法再强转成子类的对象了
+// java.sql.Date date7 = (java.sql.Date) date6; // 编译不报错，运行报错
+java.sql.Date date7 = new java.sql.Date(date6.getTime()); // 二者共通的就是时间戳
+```
+
+ 
