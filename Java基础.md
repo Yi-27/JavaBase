@@ -3001,7 +3001,7 @@ String:字符串，""引起来
 
 
 
-# StringBuffer和StringBuilder类
+## StringBuffer和StringBuilder类
 
 **可变的字符序列**
 
@@ -3099,3 +3099,386 @@ java.sql.Date date7 = new java.sql.Date(date6.getTime()); // 二者共通的就�
 ```
 
  
+
+
+
+# Day30 2020/9/27
+
+## JDK 8 之前日期时间API
+
+### java.text.simpleDateFormat类
+
+```java
+SimpleDateFormat的使用：SimpleDateFormat对日期Date类的格式化和解析、
+1. 两个操作
+1.1 格式化：日期 ---> 字符串
+1.2 解析：格式化的逆过程：字符串 ---> 日期
+// 实例化SimpleDateFormat
+SimpleDateFormat sdf = new SimpleDateFormat();
+
+// 格式化： 日期 ---> 字符串
+Date date = new Date();
+System.out.println(date);
+
+String format = sdf.format(date); // 20-9-27 上午9:12 默认解析
+System.out.println(format);
+
+String str0 = "19-9-27 下午9:12";
+Date parse1 = sdf.parse(str0); // 默认行为
+System.out.println(parse1);
+
+// 解析：格式化的逆过程：字符串 ---> 日期
+//        SimpleDateFormat sdf1 = new SimpleDateFormat("yyyyy.MMMMM.dd GGG hh:mm:ss aaa");
+// 指定方式格式化和解析：调用带参的构造器
+// 格式化
+SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy.MM.dd hh:mm:ss");
+String format1 = sdf1.format(date);
+System.out.println(format1); // 2020.09.27 09:22:09
+// 解析：要求字符串要满足 自己定义的sdf 的格式。否则无法识别抛出异常
+Date parse = sdf1.parse(format1);
+System.out.println(parse);
+```
+
+
+
+### java.util.Calendar（日历）类
+
++ 主要用于完成日期字段之间操作的公共
++ 该类是个抽象类
++ 获取Calendar实例的方法
+    + 调用Calendar.getInstance()方法
+    + 调用它的子类GregorianCalendar的构造器
++ calendar是可变的
++ 年份是从1900年开始的
+
+注意：
+
++ 获取月份时：一月是0，12月是11
++ 获取星期时，周日是1，周一是2，周六是7
++ 没办法直接格式化Calendar，需要转换成Date
++ 线程不安全，不能处理闰秒
+
+
+
+## JDK 8 中新日期时间API
+
+旧的Date类的构造器（指定年月日）并不是真的是输入的年月日，它会调用Calendar类来创建日期，并且有一定的偏移量，偏移了1900年
+
+所以用Date类来创建指定年月日的日期时要减去1900年才能得到想要的年份
+
+JDK8 吸收了Joda-Time的精华。
+
+新时间日期API
+
++ java.time：包含值对象的基础包
++ java.time.chrono：提供对不同的日历系统的访问
++ java.time.format：格式化和解析时间和日期
++ java.time.temporal：包括底层框架和扩展特性
++ java.time.zone：包含时区支持的类
+
+
+
+#### LocalTime LocalDate LocalDateTime的使用
+
+```java
+// now()：获取当前的日期，时间，日期+时间
+LocalDate localDate = LocalDate.now();
+LocalTime localTime = LocalTime.now();
+LocalDateTime localDateTime = LocalDateTime.now();
+
+System.out.println("localDate = " + localDate);
+System.out.println("localTime = " + localTime);
+System.out.println("localDateTime = " + localDateTime);
+
+// of()：设置指定的 年月日时分秒，没有偏移量
+LocalDateTime localDateTime1 = LocalDateTime.of(2020, 9, 26, 13, 24, 52);
+System.out.println(localDateTime1);
+
+// getXxx()：获取指定日期或时间
+System.out.println(localDateTime.getDayOfMonth()); // 27
+System.out.println(localDateTime.getDayOfWeek()); // SUNDAY
+System.out.println(localDateTime.getDayOfYear()); // 271
+System.out.println(localDateTime.getMonthValue()); // 9
+System.out.println(localDateTime.getMonth()); // SEPTEMBER
+System.out.println(localDateTime.getYear()); // 2020
+System.out.println(localDateTime.getHour()); // 10
+System.out.println(localDateTime.getMinute()); // 43
+System.out.println(localDateTime.getSecond()); // 13
+
+// withXxxx()：设置时间和日期
+LocalDateTime localDateTime2 = localDateTime1.withDayOfMonth(28); // 返回新的对象，体现不可变性
+System.out.println(localDateTime2);
+
+// 加减操作
+LocalDateTime localDateTime3 = localDateTime2.plusMonths(3);// 加上三个月
+System.out.println(localDateTime3);
+localDateTime3 = localDateTime3.plusMonths(-1);// 加上一个负的等于减去正的
+System.out.println(localDateTime3);
+LocalDateTime localDateTime4 = localDateTime3.minusWeeks(1);// 减去一个星期
+System.out.println(localDateTime4);
+```
+
+java.time包是基于纳秒计算的
+
+1 ns = 10^-9 s
+
+1 秒 = 1000 毫秒 = 10^6 微秒 = 10^9 纳秒
+
+
+
+### Instant（瞬时）类
+
++ 时间线上的一个瞬时点，可能用来几率应用程序中的实践时间戳
+
+```java
+/*
+            Instant类使用
+            类似于java.util.Date
+         */
+        // 实例化 now()：获取本初子午线对应的标准时间
+        Instant instant = Instant.now();
+        System.out.println(instant); // 2020-09-27T03:05:15.606Z 差了8个小时 算的是本初子午线的时间
+
+        // 添加时间的偏移量
+        OffsetDateTime offsetDateTime = instant.atOffset(ZoneOffset.ofHours(8));
+        System.out.println(offsetDateTime); // 2020-09-27T13:09:52.169+08:00
+
+        // 获取自1970年1月1日0时0分0秒（UTC）到现在的毫秒数 --> Date.getTime()
+        long milli = instant.toEpochMilli();
+        System.out.println(milli);
+
+        // 通过毫秒数来创建对象 ofEpochMilli()：通过给定的毫秒数，获取Instant实例 ---> Date(long milli)
+        Instant instant1 = Instant.ofEpochMilli(1601183528121L);
+        System.out.println(instant1);
+```
+
+
+
+### DateTimeFormatter格式化时间
+
+```java
+/*
+    DateTimeFormatter：格式化或解析日期、时间
+    类似于SimpleDateFormat
+ */
+// 方式一：预定义的标准格式：如：ISO_LOCAL_DATE_TIME;ISO_LOCAL_DATE;ISO_LOCAL_TIME
+DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+// 格式化 日期 --> 字符串
+LocalDateTime localDateTime = LocalDateTime.now();
+System.out.println(localDateTime);
+String format = formatter.format(localDateTime);
+System.out.println(format);
+// 解析：字符串 --> 日期
+TemporalAccessor parse = formatter.parse(format);
+System.out.println(parse);
+
+// 方式二：本地化相关的格式：如：ofLocalizedDateTime(FormatStyle.LONG)
+// 本地相关的格式：如ofLocalizedDateTime()
+// FormatStyle.LONG / FormatStyle.MEDIUM / FormatStyle.SHORT : 适用于 LocalDateTime
+DateTimeFormatter formatter1 = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG);
+// 格式化 Long: 2020年9月27日 下午01时31分13秒   SHORT:20-9-27 下午1:31    MEDIUM:2020-9-27 13:32:10
+String format1 = formatter1.format(localDateTime);
+System.out.println(format1);
+// 解析
+TemporalAccessor parse1 = formatter1.parse("2020年9月27日 下午01时31分13秒");
+System.out.println(parse1); // 必须要与格式化时的格式一致，不然抛异常
+
+
+// ofLocalizedDate()
+// FormatStyle.FULL / FormatStyle.lONG / FormatStyle.MEDIUM / FirmatStyle.SHORT 适用于 LocalDate
+// 2020年9月27日 星期日 / 2020年9月27日 / 2020-9-27 / 20-9-27
+DateTimeFormatter formatter2 = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT);
+// 格式化
+String format2 = formatter2.format(LocalDate.now());
+System.out.println(format2);
+
+
+// 方式三（重点）：自定义的格式，如：ofPattern("yyyy-MM-dd hh:mm:ss E")
+DateTimeFormatter formatter3 = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
+// 格式化
+String format3 = formatter3.format(LocalDateTime.now());
+System.out.println(format3); // 2020-09-27 01:44:49
+// 解析
+TemporalAccessor parse2 = formatter3.parse("2020-09-27 05:05:05");
+System.out.println(parse2);
+// {SecondOfMinute=5, HourOfAmPm=5, NanoOfSecond=0, MicroOfSecond=0, MinuteOfHour=5, MilliOfSecond=0},ISO resolved to 2020-09-27
+```
+
+
+
+#### 使用LocalDateTime自带的parse来解析时间
+
+```java
+// 通过LocalDateTime自带的parse来解析时间
+LocalDateTime now = LocalDateTime.now();
+System.out.println(now);
+LocalDateTime localDateTime = LocalDateTime.parse("2020-09-27T13:54:36.469"); // 不指定解析格式时用默认的
+System.out.println(localDateTime);
+System.out.println(LocalDateTime.parse("2020-09-27 05:05:05", DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
+System.out.println(LocalDateTime.parse("2020-09-27 05:05:05", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))); // 用小写的h会抛异常
+```
+
+
+
+### 其他API
+
++ ZoneId：该类中包含了所有的失去信息，一个时区的ID
++ ZonedDateTime：一个在ISO-8601日历系失去的日期时间
+    + 其中每个时区都对应着ID，地区ID都为“{区域}/{城市}”，如：Asia/Shanghai等
++ Clock：使用失去提供对当前即时/日期和时间的访问的时钟
++ 待续时间：Duration，用于计算两个时间间隔
++ 日期间隔：Period，用于计算两个日期间隔
++ TemporalAdjuster：时间矫正器，比如将日期调整到下一个工作日等
++ TemporalAdjusters：提供了大量静态方法，是对于TemporalAjuster的实现
+
+
+
+## Java的比较器
+
+对象之间的比较问题
+
++ 自然排序：java.lang.Comparable
++ 定制排序：java.util.Comparator
+
+
+
+Java中的对象，一般只能进行 == 或 != 的比较，不能使用 > 或 <的
+
+但是在开发中会涉及到这样的对象比较
+
+这就需要这两个接口了 
+
+
+
+#### Comparable接口的使用     自然排序
+
+```
+1. 像String及包装类等实现了Comparable接口，重写了compareTo(obj)方法给出了比较两个对象大小的方法
+2. 像String及包装类重写compareTo()方法后，进行从小到大的排列
+3，重写compareTo()的规则：
+        如果当前对象this大于形参对象obj，则返回正整数
+                       小于                  负整数
+                       等于                   0
+4. 对于自定义类来说，如果需要排序，可以让自定义类实现Comparable接口，重写compareTo()方法
+    在compareTo()方法中指明如何排序
+```
+
+#### Comparator接口的使用    定制排序
+
+```
+1. 背景
+    当元素的类型没有实现java.lang.Comparable接口又不方便修改代码
+    或者实现了java.lang.Comparable接口的排序规则不适合当前的操作
+    那么就可以考虑使用Comparator
+2. 重写compare(Object o1, Object o2)方法，比较o1和o2的大小
+        如果方法返回正整数，则表示 o1 大于 o2
+                   负整数            小于
+                   0                 等于
+```
+
+二者对比
+
++ Comparable接口的方式一旦一定，保证comparable接口实现类的对象在任何位置都可以比较大小
++ Comparator接口属于临时性的比较（应该也可以用实现类当作comparable那样的使用）
+
+
+
+## System类
+
+系统的很多属性和控制方法都在该类内部，位于java.lang包内
+
+该类时private的，无法创建该类对象，内部方法和变量都是static的
+
++ System类内部包含in、out和err三个成员变量，分别代表标准输入流（键盘输入），标准输出流（显示器）和标准错误输出流（显示器）
+
++ 成员方法
+    + native long currentTimeMills()
+        + 返回当前计算机时间，时间戳，标准GMT时间
+    + void exit(int status)
+        + 退出程序，status的值为0代表正常退出，非0代表异常退出
+        + 使用该方法可以在图形界面编程中实现程序的退出功能
+    + void gc()
+        + 请求系统进行垃圾回收
+        + 系统是否会立刻进行回收，取决于系统中垃圾回收算法的实现以及系统执行时的情况
+    + String getProperty(String key)
+        + 获取系统中属性名为key的属性对应的值
+        + 系统中常见的属性及作为如下：
+            + java.version：java运行时环境版本
+            + java.home：java安装目录
+            + os.name：操作系统的名称
+            + os.version：操作系统的版本
+            + user.name：用户的账户名称
+            + user.home：用户的主目录
+            + user.dir：用户的当前工作目录
+    + getProperties()
+        + 一次性返回所有系统的属性
+
+
+
+## Math类
+
+java.lang.Math类提供了一系列静态方法用于科学计算，其方法的参数和返回值类型一般都是double型
+
++ abs，绝对值
++ sqrt，平方根
++ pow(double a, double b)，a的b次幂
++ exp，e为底指数
++ random，返回0.0到1.0的随机数
++ long round(double a)，double 型数据a转换为long型（四舍五入）
++ toDegrees(double angrad)，弧度 --> 角度
++ toRadians(double angdeg)，角度 --> 弧度
+
+
+
+## BigInteger与BigDecimal类
+
+##### BigInteger
+
++ Integer类作为int的包装类，能存储的最大整数型值为2^31-1，Long类也是有限的，最大为2^63-1
++ 如果要表示再大的整数，就无能为力了
++ java.math包的BigInteger可以表示**不可变的任意精度的整数**
+    + 提供了Java的基本整数操作符的对应物，并提供java.lang.Math的所有相关方法
+    + 另外，BigInteger还提供了：
+        + 模运算
+        + GCD计算
+        + 质数测试
+        + 素数生成
+        + 位操作
+        + 以及一些其他的操作
++ 构造器
+    + BigInteger(String val)，根据字符串构建BigInteger对象
+
+
+
+##### BigDecimal
+
++ 一般的Float类和Double类可以用来做科学计算或工程计算
++ 但在商业计算中，要求数字精度比较高，所以用到java.math.BigDecimal类
+
++ BigDecimal类支持不可变的、任意精度的有符号十进制定点数
++ 构造器
+    + public BigDecimal(double val)
+    + public BigDecimal(String val)
++ 常用方法
+    + add()
+    + subtract()
+    + multiply()
+    + divide()
+
++ 使用参数为float或double的BigDecimal创建对象会丢失精度
+    +  使用BigDecimal(String val)的构造方法创建对象
+        `new BigDecimal("1.745");`
+        `new BigDecimal("0.745");`
+    + 使用使用BigDecimal的valueOf(double val)方法创建对象
+        `BigDecimal.valueOf(1.745);`
+        `BigDecimal.valueOf(0.745);` 
+
+
+
+## 枚举类
+
+JDK5.0之前需要自定义枚举类
+
+
+
+**当需要定义一组常量时，强烈建议使用枚举类**。前提是类的对象是有限个，确定的。
