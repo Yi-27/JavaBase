@@ -3475,6 +3475,8 @@ java.lang.Math类提供了一系列静态方法用于科学计算，其方法的
 
 
 
+# Day31 2020/9/28
+
 ## 枚举类
 
 JDK5.0之前需要自定义枚举类
@@ -3482,3 +3484,115 @@ JDK5.0之前需要自定义枚举类
 
 
 **当需要定义一组常量时，强烈建议使用枚举类**。前提是类的对象是有限个，确定的。
+
+如果枚举类中只有一个对象，则可以作为单例模式的实现方式
+
+
+
+### 如何定义枚举类
+
++ jdk5.0 之前，自定义枚举类
++ jdk5.0，使用enum关键字定义枚举类
+
+
+
+枚举类默认继承与java.lang.Enum类，并且该类重写过toString()方法了，当然还可以再重写
+
+**Enum类的主要方法**
+
++ values()方法：返回枚举类型的对象数组，该方法可以很方便地遍历所有的枚举值
++ valueOf(String str)：可以把一个字符串转为对应的枚举类对象。要求字符串必须是枚举类对象
++ toString()：返回当前枚举类对象常量的名称
+
+```java
+// Enum类的toString()
+System.out.println(summer); // SUMMER 没有自己重写时，打印枚举的对象的变量名
+System.out.println(Season2.class.getSuperclass()); // java.lang.Enum
+// Enum类的values()
+Season2[] values = Season2.values();
+System.out.println(Arrays.toString(values));
+// Enum类的valueOf(String objName)：返回枚举类中对象名是objName的对象
+Season2 winter = Season2.valueOf("WINTER"); // 如果没有objName的枚举类对象，则抛异常：IllegalArgumentException
+System.out.println(winter);
+```
+
+
+
+**使用enum关键字定义的枚举类实现接口的情况**
+
++ 实现接口，在enum类中实现抽象方法
++ 让枚举类的对象分别实现抽象方法
+
+
+
+# 注解（Annotation）
+
+jdk5.0的新增
+
++ Annotation其实就是代码里的**特殊标记**，可以在编译、类加载、运行时被读取，并执行相应的处理。
+
++ 通过使用注解，可以在不改变原有的逻辑下，在源文件中嵌入一些补充信息。
+
++ 代码分析工具、开发工具和部署工具可以通过这些补充信息进行验证或者进行部署
+
++ Annotation可以像修饰符一样被使用，可以用于修饰包、类、构造器、方法、成员变量、参数、局部变量的声明
+    + 这些信息被保存在Annotation的“name=value"对中
++ 一定程度上可以说，框架 = 注解 + 反射 + 设计模式 
+
+
+
+在编译时进行格式检查（JDK内置的三个基本注解
+
++ @Override：限定重写父类方法，该注解只能用于方法
++ @Deprecated：用于表示所修饰的元素（类，方法等）已过时，通常是因为所修饰的结构危险或存在更好的选择
++ @SuppressWarnings：抑制编译器警告
+
+
+
+跟踪代码依赖性，实现替代配置文件功能
+
+
+
+### 自定义注解
+
+参考 @SuppressWarnings 来定义
+
++ 注解声明，使用@interface关键字
+
+```
+public @interface MyAnnotation {
+}
+```
+
++ 自定义注解自动继承了java.lang.annotation.Annotation接口
++ Annotation的成员变量在Annotation定义中以无参数方法的形式来说明
+    + 其方法名和返回值定义了该成员的名字和类型，称之为配置参数
+    + 类型只能是八种基本数据类型
+        + String类型、Class类型、enum类型、Annotation类型以上所有类型的数组
++ 可以在定义Annotation的成员变量时为其指定初始值，指定成员变量的初始值可使用default关键字
++ 如果只有一个参数成员，建议使用参数名为value
++ 如果定义的注解含有配置参数，那么使用时必须指定参数值，除非它有默认值。
+    + 格式是“参数名 = 参数值”
+    + 如果只有一个参数成员，且名称为value，可以省略“value = ”
+
++ 没有成员定义的Annotation称为标记
++ 包含成员变量的Annotation称为元数据Annotation
+
+注意：**自定义注解必须配上注解的信息处理流程才有意义**
+
+
+
+**自定义注解过程：**
+
++ 注解声明为：@interface
++ 内部定义成员，通常使用value表示
++ 可以指定成员的默认值，使用default定义
++ 如果自定义注解没有成员，表明是表示的作用
+
+如果注解有成员，在使用注解时，需要指明成名的值（有默认值则无需指定值）
+
+自定义注解必须配上注解的信息处理流程（使用反射）才有意义
+
+
+
+jdk提供了4种元注解
