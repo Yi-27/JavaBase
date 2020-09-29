@@ -3525,7 +3525,7 @@ System.out.println(winter);
 
 
 
-# 注解（Annotation）
+## 注解（Annotation）
 
 jdk5.0的新增
 
@@ -3595,4 +3595,321 @@ public @interface MyAnnotation {
 
 
 
+# Day32 2020/9/29
+
 jdk提供了4种元注解
+
++ 用于修饰其他Annotation定义
+
++ jDK5.0提供了4个标准的meta-annotation类型
+    + Retention
+        + 只能用于修饰一个Annotation定义，用于指定该Annotation的声明周期
+        + @Rentention包含一个RetentionPolicy类型的成员变量，使用@Rentention时必须为该value成员变量指定值
+            + RetentionPolicy.SOURCE：在源文件中有效（即源文件保留），编译器直接丢弃这种策略的注释
+            + RetentionPolicy.CLASS：在class文件中有效（即class保留），当运行Java程序时，JVM不会保留注解，这是默认值。当不标明这个注解时，注解的声明周期就是该状态
+            + RetentionPolicy.RUNTIME：在运行时有效（即运行时保留），当运行Java程序时，JVM会保留注解，**程序可以通过反射获取该注解 
+    + Target
+        + 用于指定被修饰的Annotation能用于修饰哪些程序元素
+    + Documented
+        + 用于指定该元注解修饰的Annotation类将被javadoc工具提取成文档，默认情况下，Javadoc是不包括注解的
+        + 定义为Documented的注解必须设置Retention值为RUNTIME
+    + Inherited
+        + 被它修饰的Annotation将具有继承性
+        + 如果某个类使用了被@Inherited修饰的Annotation，则其子类将自动具有该注解
+            + 子类继承父类类级别的注解
+            + 实际应用中，使用较少
++ 元数据（数据库中）的理解：对现有数据进行修饰的数据
++ 元注解：对现有注解进行注解的注解
++ 定义注解通常指明两个元注解：Retention和Target
+
+通过反射获取注解信息
+
+
+
+### JDK8注解新特性
+
+**可重复注解**
+
++ 在MyAnnotation上声明@Repeatable，成员值为 MyAnnotations.class
++ MyAnnotation的@Target和@Retention和MyAnnotations相同
+    + 不同的话，直接编译出错
++ MyAnnotation要有@Inherited的话，MyAnnotations就必须也要加上
+    + 不加的话，编译不出错但运行时会报错
+
+**类型注解**
+
++ 在JDK1.8之后，关于元注解@Target的参数类型ElementType枚举值多了两个
+    + TYPE_PARAMETER
+    + TYPE_USE
++ 在Java8之前，注解只能是在声明的地方所使用，Java8开始，注解可以应用在任何地方
+    + ElementType.TYPE_PARAMETER 表示该注解能写在类型变量的声明语句中
+        + （如：类中，方法中泛型声明）
+        + 但是方法上类的泛型、变量上类的泛型，还需要使用TYPE_USE才可以
+    + ElementType.TYPE_USE 表示该注解能写在使用类型的任何语句中
+
+
+
+## Java集合
+
+Java集合就像一种容器，可以动态地把多个对象的引用放入容器中
+
+**数组在内存存储方面的特点：**
+
++ 数组初始化以后，长度就确定了
+
++ 数组声明的类型，就决定了进行元素初始化时的类型
+    + 当然如果定义成 Object[] arr，还是可以放入不同的子类对象的
+
+**数组在存储数据方面的弊端：**
+
++ 数组初始化后，长度就不可变了，不便于扩展
++ 数组中提供的属性和方法少，不便于进行添加、删除、插入等操作，且效率不高，**同时无法直接获取存储元素的个数**
++ 数组存储的数据时**有序的，可以重复的** ---> 存储数据的特点单一
+    + 无序的、不可重复的需求，不能满足
+
+
+
+Java集合类可以用于存储数量不等的多个对象，还可用于保存具有映射关系的关联数组
+
+集合中还是用到了数组
+
+
+
+Java集合可分为Collection和Map两种体系
+
++ Collection接口：单列数据，定义了存取一组对象的方法的集合
+
+    + List：元素有序、可重复的集合
+    + Set：元素无序、不可重复的集合
+
++ Map接口：双列数据，保存具有映射关系“key-value对”的集合
+
+    
+
+![image-20200929123911905](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20200929123911905.png)
+
+![image-20200929123959514](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20200929123959514.png)
+
+### 集合框架
+
+|----Collection接口：单列集合，用来存储一个一个的对象
+
+​		|----List接口：存储有序、可重复的数据	---> ”动态“数组
+
+​				|----ArrayList、LinkedList、Vector
+
+​		|----Set接口：存储无序的、不可重复的数据	---> 高中讲的”集合 “
+
+​				|----HashSet、LinkedHashSet、TreeSet
+
+|----Map接口：双列集合，用来存储一堆（key - value）一堆的数据 	键值对
+
+​		|----HashMap、LinkedHashMap、TreeMap、Hashtable、Properties
+
+
+
+#### Collection接口中的方法
+
++ add(Object e)：将元素e添加到集合coll中
+
++ size()：获取添加的元素的个数
+
++ addAll(Collection coll2):将coll2集合中的元素添加到当前的集合中
++ clear()：情况集合元素
++ isEmpty()：判断当前集合是否为空
++ contains(Object obj)：判断当前集合中是否包含obj，会调用obj对象所在类的equals()
+    + 因此向Collection接口的实现类的对象中添加数据obj时，要求obj所在类要重写equals()
++ containsAll(Collection coll2)：判断形参coll2中的所有元素是否都存在于当前集合中
++ remove(Object obj)：从当前集合中移除obj元素
++ removeAll(Collection coll2)：差集：从当前集合中移除coll1中所有的元素
++ retainAll(Collection coll3)：交集:获取当前集合和coll3集合的交集，并返回给当前集合
++ equals(Object obj)：比较元素是否一一对应相等，按顺序比较
++ hashCode()：返回当前对象的哈希值
++ toArray()：集合 ---> 数组：toArray()
+    + 数组 ---> 集合：Arrays.asList()
++ iterator()：返回Iterator接口的实例，用于遍历集合元素
+
+
+
+注意：向Collection接口的实现类的对象中添加数据Obj时，要求Obj所在类要重写equals()，在contains和remove时都会调用equals()方法
+
+
+
+### Iterator迭代器接口
+
+#### 使用Iterator接口遍历集合元素
+
++ Iterator对象成为迭代器（设计模式的一种），主要用于遍历Collection集合中的元素
++ GOF给迭代器模式的定义为：**提供一种方法访问一个容器（container）对象中各个元素，而又不需暴露该对象的内部细节。迭代器模式，就是为容器而生**
++ Collection接口继承了java.lang.Iterable接口，该接口有一个iterator()方法
+    + 因此所有实现了Collection接口的集合类都有一个iterator()方法，用以返回一个实现了Iterator接口的对象
++ Iterator仅用于遍历集合，Iterator本身并不提供承装对象的能力。
+    + **如果需要创建Iterator对象，则必须有一个被迭代的集合**
++ **集合对象每次调用iterator()方法都得到一个全新的迭代器对象**，默认游标都在集合的第一个元素之前
+
+
+
+内部的方法：hasNext() 和 next()
+
++ hasNext()
+    + 判断是否还有下一个元素
++ next()
+    + 指针下移
+    + 将下移以后集合位置上的元素返回
+
+
+
+default方法：remove()
+
++ 从集合中移除遍历到的iterator对应的元素
++ 此方法不同于集合直接调用remove()
+    + 底层的实现不一样
++ 在没有调用next()前，一定不要调用remove()，不然就会抛异常IllegalStateException
++ 并且在下一次调用next()前，也不能重复调用remove()
+
+
+
+jdk5.0新增了foreach循环，用于遍历集合、数组
+
+```java
+Collection coll = new ArrayList();
+coll.add("AA");
+coll.add('c');
+coll.add(123); // 自动装箱
+coll.add(456.7890313);
+coll.add(false);
+coll.add(new Date());
+
+// for(集合元素的类型 局部变量 : 集合对象)
+for(Object obj : coll){ // 其实内部凋的还是迭代器
+    System.out.println(obj);
+}
+
+int[] arr = new int[]{1,2,3,4,5,6};
+// for(数组元素的类型 局部变量 : 数组对象)
+for(int i : arr){
+    System.out.println(i);
+}
+```
+
+
+
+## List接口
+
++ 通常使用List替代数组
++ List集合类中**元素有序**、**且可重复**，集合中的每个元素都有其对应的顺序索引
++ List容器中的元素都对应一个整数型的序号记载其在容器中的位置，可以根据序号存取容器中的元素
++ JDK API中List接口的实现类常用的有：ArrayList、LinkedList和Vector
+
+
+
+```
+* ArrayL：作为List接口的主要实现类
+*      线程不安全的，效率高
+*      底层使用Object[] elementData存储
+* LinkedList：
+*      对于频繁的 插入 和 删除 操作，使用此类效率比ArrayList高
+*      底层使用双向链表存储（上一个元素地址 | 元素值 | 下一个元素地址）
+* Vector：作为List接口的古老实现类 jdk 1.0
+*      线程安全的，效率低
+*      底层使用Object[] elementData存储
+*
+* 异同？
+* 同： 三个类都实现了List接口，存储数据的特点相同，存储有序的、可重复的数据
+* 不同：见上
+```
+
+
+
+#### 关键字transient
+
+java 的transient关键字为我们提供了便利，你只需要实现Serilizable接口，将不需要序列化的属性前添加关键字transient，序列化对象的时候，这个属性就不会序列化到指定的目的地中。
+
+
+
+### ArrayList底层源码分析
+
+ArrayList在jdk7和jdk8中不同
+
+**jdk7情况下**
+
++ ArrayList list = new ArrayList();
+
++ 底层创建了长度是10的Object[] 数组elementData
++ 默认情况下扩容时，是扩容为当前容量的1.5倍。（这类似于StringBuilder
+    + 当扩容1.5倍后还是小于所需容量，则直接扩容为所需容量
+    + 当扩容到整型最大值时，就取整型的最大值
+
++ 将数组中的元素通过Arrays.copyOf()复制进新数组中
++ **建议开发中使用带参的构造器**：ArrayList list = new ArrayList(int capacity);
+    + 这样能节省频繁扩容时所消耗的资源
+
+**jdk8中的变化**：
+
++ ArrayList list = new ArrayList();
++ 底层Object[] elementData**初始化为{}**，**并没有创建长度为10的数组**
++ 第一次调用add()时，底层才创建了长度为10的数组，并将数据添加进elementData[0]内
++ 后续的添加和扩容与jdk7无异
+
+
+
+jdk7的ArrayList的对象的创建类似于单例的饿汉式，而jdk8中的ArrayList的对象的创建类似于单例的懒汉式，延迟了数组的创建，节省内存
+
+
+
+### LinkedList底层源码分析
+
++ LinkedList list = new LinkedList();
+
++ 内部声明了Node类型的first和last属性，默认值为null
+
++ list.add(123)； 将123封装到Node中，创建了Node对象
+
+    + ```
+        private static class Node<E> {
+                E item;
+                Node<E> next;
+                Node<E> prev;
+        
+                Node(Node<E> prev, E element, Node<E> next) {
+                    this.item = element;
+                    this.next = next;
+                    this.prev = prev;
+                }
+        }
+        ```
+
+    + 双向链表，灵活
+
+
+
+### Vector底层源码分析
+
++ 初始化也是10长度的数组
++ 扩容默认扩容二倍
++ 线程安全的（但也不一定用，有Collections工具类中同步的方法更好用）
+
+
+
+### List常用方法调用
+
+除了实现Collection接口的方法外，List接口还有一些自己的方法
+
++ void add(int index, Object ele）：在index位置插入ele元素
++ boolean addAll(int index,Collection eles)：从index位置开始将eles中所有元素插入进去
++ Object get(int index)：获取指定index位置的元素
++ int indexOf(Object obj)：返回obj在集合中首次出现的位置，如果不存在就返回-1
++ int lastIndexOf(Object obj)：返回obj在当前集合中末次出现的位置，如果不存在返回-1
++ Object remove(int index)：移除指定index位置的元素，并返回此元素
++ Object set(int index, Object ele)：设置指定index位置的元素为ele
++ List subList(int fromIndex, int toIndex)：返回fromIndex到toIndex位置的左闭右开区间
++ size()：长度
+
+
+
+**循环遍历List**
+
++ Iterator迭代器方式
++ forEach
++ 普通的循环
+
