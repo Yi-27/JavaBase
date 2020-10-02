@@ -1,3 +1,5 @@
+
+
 #  Day1		2020/6/5
 
 + Java仍然会存在内存泄漏和溢出的问题。
@@ -3794,6 +3796,29 @@ for(int i : arr){
 
 
 
+**Enumeration接口是Iterator迭代器的“古老版本”**
+
+```
+Enumeration stringEnum = new StringTokenizer("a-b*c-d-e-g", "-");
+while (stringEnum.hasMoreElements()) {
+    Object obj = stringEnum.nextElement();
+    System.out.println(obj);
+    /*
+        a
+        b*c
+        d
+        e
+        g
+     */
+}
+```
+
+
+
+
+
+
+
 ## List接口
 
 + 通常使用List替代数组
@@ -4011,3 +4036,509 @@ TreeSet和TreeMap采用**红黑树**的存储结构
 自然排序中，比较两个对象是否相同的标准为：compareTo()返回0，不再是equals()
 定制排序中，比较两个对象是否相同的标准为：compare()返回0，不再是equals()
 ```
+
+
+
+# Day34 2020/10/1
+
+## Map接口
+
+```
+* Map的实现类的结构：
+* |----Map：双列数据，存储key-value对的数据
+*      |----HashMap：作为Map的主要实现类。线程不安全，效率高；存储null的key和value
+*          |----LinkedHashMap：保证在遍历map元素时，可以按照添加的顺序实现遍历
+*                  原因：在原有的HashMap底层结构基础上，添加了一对指针，指向前一个和后一个元素
+*                  对于频繁的遍历操作，此类指向效率高于HashMap
+*      |----TreeMap：可以按照添加的key-value对进行排序，实现排序遍历；此时考虑key的自然排序和定制排序，而不是value
+*                    底层使用红黑树
+*      |----Hashtable：作为古老的实现类；线程安全，效率低；不能存储null的key和value
+*          |----Properties：常用来处理配置文件。key和value都是String类型
+*
+*  HashMap的底层：数组 + 链表 （jdk7及之前）
+*                 数组 + 链表 + 红黑树 （jdk8）
+```
+
+ **Map结构的理解：**
+
++ key是无序的、不可重复的，使用Set存储所有的key
+    +  key所在类要重写equals()和hashCode()（以HashMap为例，TreeMap不是这样的）
++ value是无序的、可重复的，使用Collection存储所有的value
+    + value所在类要重写equals()
++ Map并不是两两放进去，放的是一个Entry对象，而key和value是作为Entry的属性的
+    *      一个键值对：key-value构成一个Entry对象
+*      Map中的entry：无序的、不可重复的，使用Set存储所有的entry
+
+
+
+**HashMap的底层实现原理**。以jdk7为例说明
+
++ HashMap map = new HashMap();
++ 在实例化以后，底层创建了长度是16的一维数组Entry[] table;
++ ...可能执行过多次put...
++ map.put(key1, value1);
++ 首先，调用key1所在类的hashCode()计算key1哈希值，此哈希值经过某种算法计算后得到在Entry数组中存放位置
+    + 如果此位置上的数据为空，此时key1-value1添加成功   ---> 情况1
+    + 如果此位置上的数据不为空，（意味着此位置上存在一个或多个数据（以链表形式存在）），比较key1和已经存在的一个或多个数据的哈希值：
+        + 如果key1的哈希值与已经存在的数据的哈希值都不相同，此时key1-value1添加成功    ---> 情况2
+        + 如果key1的哈希值与已经存在的某个数据(key2-value2)的哈希值相同，继续比较：调用key1所在类的equals()方法，比较：
+            + 如果equals()返回false：此时key1-value1添加成功     ---> 情况3
+            + 如果equals()返回true：使用value1替换value2，
+
+
+
+```
+补充：关于情况2和情况3：key1-value1和原来的数据以链表的方式存储（还是七上八下）
+```
+
+在不断的添加过程中，会涉及到扩容问题，默认的扩容方式：**扩容为原来容量的2倍，并将原有的数据复制过来**
+
++ 当 超出临界值 且 要存放的位置非空 时，才会扩容
++ 并且在扩容后，要重写计算所有元素存放的位置，原本是相同哈希值以链表存在同一个位置上时，可能扩容后就分开了
++ 
+
+
+
+**jdk8 相较于 jdk7底层实现方面的不同：**
+
++ new HashMap()：底层没有创建一个长度为16的数组
++ jdk8 底层的数组是：Node[]，而非Entry[]（其实都差不多）
++ 首次调用put()方法时，底层创建长度为16的数组
++ jdk7底层结构只有：数组+链表。jdk8中底层结构：数组+链表+红黑树
+    + 当数组的某一个索引位置上的元素以链表形式存在的数据个数 > 8 且当前数组的长度 > 64时
+    + 此时此索引位置上的所有数据改为使用红黑树存储。（查询效率高）
+
+
+
+**底层源码常用常数**
+
++ DEFAULT_INITAL_CAPACITY：HashMap的默认容量，16
++ DEFAULT_LOAD_FACTOR：HashMap的默认加载（填充）因子：0.75
+    + 用于控制链表数量，即要兼顾到数组利用率又要让链表尽可能的少一点
++ threshold：扩容的临界值 = 容量 * 填充因子：16 * 0.75 => 12
++ TREEIFY_THRESHOLD:
+
+
+
+面试题：
+
+谈谈对HashMap中put/get方法的认识？再谈谈扩容机制？默认大小是多少？什么是负载因子（或填充比）？什么是吞吐临界值（或阈值、threshold）？
+
++ 默认大小是16
++ 临界值是到多少就扩容，而不是超了才扩容
+
+当new HashMap(15)； 想显示的在底层创建15的数组，其实还是创建16的数组，
+
+
+
+# Day35 2020/10/2
+
+jdk7中HashMap同一位置如何以链表来存数据的？
+
++ 先将原本位置上的旧元素取出来
+
++ 然后new Entry<>()将新元素的哈希值、键、值、和旧元素传进去
+
+    + ```java
+        static class Entry<K, V> implements Map.Entry<K, V>{
+            final K key;
+            V value;
+            Entry<K, V> next; // 链表的指针，指向下一个元素
+            int hash;
+            
+            Entry(int h, K k, V v, Entry<K, V> n){
+            	value = v;
+                key = k;
+                hash = h;
+                next = n; // 将旧的元素放到这里
+        	}
+        }
+        
+        ```
+
+jdk8中的HashMap的变化
+
++ 不用Entry，改用Node了
+
++ ```java
+    static class Node<K,V> implements Map.Entry<K,V> {
+            final int hash;
+            final K key;
+            V value;
+            Node<K,V> next;
+    
+            Node(int hash, K key, V value, Node<K,V> next) {
+                this.hash = hash;
+                this.key = key;
+                this.value = value;
+                this.next = next;
+            }
+        // ...
+    }
+    ```
+
++ putVal源码解析（添加数据的过程）
+
+    + ```java
+        final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+                       boolean evict) {
+            Node<K,V>[] tab;
+            Node<K,V> p;
+            int n, i; // n为tab长度，i表示存放数据在tab上的索引位置
+            // Node<K,V>[] table; 就是存数据的地方
+            // 如果是首次调用tab = table 是 null 因为还没开始存数据，这样的话就给tab开辟空间
+            // 如果不是首次添加这个逻辑就不用考虑了
+            if ((tab = table) == null || (n = tab.length) == 0)
+                n = (tab = resize()).length;
+            // 计算当前要在tab上存放的位置，将该位置上的数据赋值给p，没数据时，等于null
+            if ((p = tab[i = (n - 1) & hash]) == null)
+                tab[i] = newNode(hash, key, value, null);// 该位置没数据直接存
+            else {
+                // 当要存放的位置已有数据时，就以链表的形式存储数据了
+                Node<K,V> e; K k; // 中间变量，接收 数据 和 key
+                // 先判断该位置上的数据与要添加进去的数据的哈希值是否一样
+                // 当哈希值一样时，再判断 两者的地址是否一样 或者 内容是否一样
+                // 地址一样内容肯定就一样，所以这里用的 || 
+                // 这里只是该位置第一个数据的比较，要时不相等就要比较后续的链表中的数据（前提时该位置有其他数据）
+                if (p.hash == hash &&
+                    ((k = p.key) == key || (key != null && key.equals(k))))
+                    e = p; // 中间变量暂存一下该位置的原数据
+                else if (p instanceof TreeNode)
+                    // 当数据不一样时，红黑树的情况
+                    e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+                else {
+                    // 尾插法
+                    for (int binCount = 0; ; ++binCount) {
+                        if ((e = p.next) == null) {
+                            // p的next为null，说明当前位置就一个元素
+                            // 那么就直接添加进去（由于上边比过新旧元素不一样）
+                            p.next = newNode(hash, key, value, null);
+                            if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                                // TREEIFY_THRESHOLD = 8
+                                // 当链表上的数据超过8时就要考虑是否变成红黑树
+                                treeifyBin(tab, hash);
+                            break;
+                        }
+                        // p.next不为null时，同上面p一样，要判断哈希值/地址/内容
+                        if (e.hash == hash &&
+                            ((k = e.key) == key || (key != null && key.equals(k))))
+                            break; // 如果存在哈希值相同且 地址或内容相同时，就break，终止循环
+                        p = e; // 准备改进该位置的下一个数据
+                        // 即p.next位置有数据又不一样，就接着比较p.next.next
+                        // 由于在最上面已经让中间变量e接收了p.next
+                        // 这里只需要让p = e，那么下一循环时就e就是p.next.next了
+                    }
+                }
+                // 只有当当前位置就p一个数据时，e才会等于 null
+                // 能进到下面，说明不需要新增数据，但可能是修改同一位置上的值，并把旧的值返回出去
+                // 当新旧值一样时，也会执行这段代码，新值替换旧值，并返回旧值
+                if (e != null) { // existing mapping for key
+                    V oldValue = e.value; // 将旧的值取出来
+                    if (!onlyIfAbsent || oldValue == null)
+                        e.value = value;
+                    afterNodeAccess(e); // 元素替换？
+                    return oldValue; // 返回出去
+                }
+            }
+            ++modCount;
+            if (++size > threshold)
+                // 判断新增数据后，可有大于临界值，大于了就要判断要不要扩容
+                resize();
+            afterNodeInsertion(evict);
+            return null;
+        }
+        ```
+
++ resize()源码分析 用于扩容
+
+    + ```java
+        final Node<K,V>[] resize() {
+            // 首次进来oldTab也是null
+            Node<K,V>[] oldTab = table; // 记录一下旧的table
+            int oldCap = (oldTab == null) ? 0 : oldTab.length;
+            int oldThr = threshold; // 临界值
+            int newCap, newThr = 0; // 新容量和新临界值先赋值为0
+            if (oldCap > 0) {
+                if (oldCap >= MAXIMUM_CAPACITY) {
+                    threshold = Integer.MAX_VALUE;
+                    return oldTab;
+                }
+                else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                         oldCap >= DEFAULT_INITIAL_CAPACITY)
+                    newThr = oldThr << 1; // double threshold
+            }
+            else if (oldThr > 0) // initial capacity was placed in threshold
+                newCap = oldThr;
+            else {               // zero initial threshold signifies using defaults
+                // 当首次开辟空间时，oldTab为 null，oldCap为0，就进到这里
+                newCap = DEFAULT_INITIAL_CAPACITY; // 16
+                newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY); // 0.75*16 = 12
+            }
+            if (newThr == 0) {
+                float ft = (float)newCap * loadFactor;
+                newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                          (int)ft : Integer.MAX_VALUE);
+            }
+            threshold = newThr; // 首次进来，临界值这样被赋值为12
+            @SuppressWarnings({"rawtypes","unchecked"})
+                Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap]; // 这里就通过newCap创建新容量大小的新的tab
+            table = newTab; // 将存储数据的table指向新的扩容后的newTab
+            if (oldTab != null) { 
+                // 当旧tab不为null时扩容后旧需要将旧数据复制到新空间里，才会进到这里
+                for (int j = 0; j < oldCap; ++j) {
+                    Node<K,V> e;
+                    if ((e = oldTab[j]) != null) {
+                        oldTab[j] = null;
+                        if (e.next == null)
+                            newTab[e.hash & (newCap - 1)] = e;
+                        else if (e instanceof TreeNode)
+                            ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                        else { // preserve order
+                            Node<K,V> loHead = null, loTail = null;
+                            Node<K,V> hiHead = null, hiTail = null;
+                            Node<K,V> next;
+                            do {
+                                next = e.next;
+                                if ((e.hash & oldCap) == 0) {
+                                    if (loTail == null)
+                                        loHead = e;
+                                    else
+                                        loTail.next = e;
+                                    loTail = e;
+                                }
+                                else {
+                                    if (hiTail == null)
+                                        hiHead = e;
+                                    else
+                                        hiTail.next = e;
+                                    hiTail = e;
+                                }
+                            } while ((e = next) != null);
+                            if (loTail != null) {
+                                loTail.next = null;
+                                newTab[j] = loHead;
+                            }
+                            if (hiTail != null) {
+                                hiTail.next = null;
+                                newTab[j + oldCap] = hiHead;
+                            }
+                        }
+                    }
+                }
+            }
+            return newTab; // 将新的tab返回
+        }
+        ```
+
++ afterNodeAccess()源码分析
+
+    + ```java
+        void afterNodeAccess(Node<K,V> e) { // move node to last
+            LinkedHashMap.Entry<K,V> last;
+            if (accessOrder && (last = tail) != e) {
+                LinkedHashMap.Entry<K,V> p =
+                    (LinkedHashMap.Entry<K,V>)e, b = p.before, a = p.after;
+                p.after = null;
+                if (b == null)
+                    head = a;
+                else
+                    b.after = a;
+                if (a != null)
+                    a.before = b;
+                else
+                    last = b;
+                if (last == null)
+                    head = p;
+                else {
+                    p.before = last;
+                    last.after = p;
+                }
+                tail = p;
+                ++modCount;
+            }
+        }
+        ```
+
++ treeifyBin()源码分析，判断是否要使用红黑树来存储
+
+    + ```java
+        final void treeifyBin(Node<K,V>[] tab, int hash) {
+            int n, index; Node<K,V> e;
+            // MIN_TREEIFY_CAPACITY = 64
+            // 判断当前的tab的长度与64比较一下，小于就扩容，大于就改用红黑树存储
+            if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
+                resize();
+            else if ((e = tab[index = (n - 1) & hash]) != null) {
+                TreeNode<K,V> hd = null, tl = null;
+                do {
+                    TreeNode<K,V> p = replacementTreeNode(e, null);
+                    if (tl == null)
+                        hd = p;
+                    else {
+                        p.prev = tl;
+                        tl.next = p;
+                    }
+                    tl = p;
+                } while ((e = e.next) != null);
+                if ((tab[index] = hd) != null)
+                    hd.treeify(tab);
+            }
+        }
+        ```
+
+
+
+#### LinkedHashMap底层实现
+
++ 父类是HashMap，大部分方法还是用的父类的
+
++ 重写了newNode()
+
+    + ```java
+        Node<K,V> newNode(int hash, K key, V value, Node<K,V> e) {
+            LinkedHashMap.Entry<K,V> p =
+                new LinkedHashMap.Entry<K,V>(hash, key, value, e); // 创建新元素对象
+            linkNodeLast(p); // 将新元素添加到链表末尾
+            return p;
+        }
+        ```
+
+    + LinkedHashMap.Entry
+
+        + ```java
+            static class Entry<K,V> extends HashMap.Node<K,V> { // 继承了HashMap的Node
+                // 除了Node中的几个属性外，多加了before和after
+                Entry<K,V> before, after; // Entry上一个元素和下一个元素。用于明确添加元素的先后顺序
+                Entry(int hash, K key, V value, Node<K,V> next) {
+                    super(hash, key, value, next); // 调用Node的构造器
+                }
+            }
+            ```
+
+    + linkNodeLast()
+
+        + ```java
+            // link at the end of list 链接到列表末尾
+            private void linkNodeLast(LinkedHashMap.Entry<K,V> p) {
+                // LinkedHashMap.Entry<K,V> tail; 双链表的尾部
+                LinkedHashMap.Entry<K,V> last = tail; // 记录尾元素
+                tail = p; // 将尾元素换成新添加元素
+                if (last == null)
+                    head = p; // 当没有尾元素时首元素就是新添加元素
+                else {
+                    p.before = last; // 新添加元素的上一个元素是 旧尾元素
+                    last.after = p; // 旧尾元素的下一个元素是 新添加元素 这就链接在一起了
+                }
+            }
+            ```
+
+
+
+在原本的HashSet()中，构造器直接创建了HashMap()的对象
+
++ 当向HashSet中add元素时，就相当于向HashMap中put元素了
+    + 而这个 元素值 就作为HashMap中的 key了，value时一个常量PRESENT = new Object()，这样也是防止真的这样调用去访问值时抛空指针异常而已
+
+
+
+### Map的常用方法
+
+见代码。
+
+
+
+### TreeMap使用
+
+向TreeMap中添加key-value，要求key必须是由同一个类创建的对象
+
+因为要按照key进行排序：自然排序 和 定制排序
+
+具体使用与HashSet一样
+
+
+
+### Properties使用
+
++ Properties类是Hashtable的子类，该对象用于处理属性文件
++ 由于属性文件里的key、value都是字符串类型，所以**Properties里的key和value都是字符串类型**
++ 存取数据时，建议使用setProperty(String key, String value)方法和getProperty(String key)方法
+
+
+
+## Collections工具类
+
++ Collections是一个操作Set、List和Map等集合的工具类
+
++ Collections中提供了**一系列静态的方法**对集合元素进行排序、查询和修改等操作，还提供了**对集合对象设置不可变**、**对集合对象实现同步控制**等方法
+
++ 排序操作：（均为static方法）
+
+    + reverse(List)：反转List中的元素的顺序
+
+    + shuffle(List)：对List集合元素进行随机排序
+
+    + sort(List)：根据元素的自然排序对指定List集合元素按升序排序
+
+    + sort(List, Comparator)：根据指定的Comparator产生的顺序对List集合元素进行排序
+
+    + swap(List, int, int)：将指定List集合中的i处元素和j处元素进行交换
+
+    + int frequnency(Collection, Object)：返回指定集合中指定元素的出行次数
+
+    + void copy(List dest, List src)：将src中的内容复制到dest中
+
+        + ```java
+            // 错误写法
+            List dest = new ArrayList();
+            Collections.copy(dest, list);  // 抛异常
+            // java.lang.IndexOutOfBoundsException: Source does not fit in dest
+            System.out.println(dest); // copy时 会比较二者的数组中的size，而不是数组的长度
+            
+            // 巧妙的写法
+            List dest = Arrays.asList(new Object[list.size()]);
+            System.out.println(dest.size()); // list.size()
+            Collections.copy(dest, list); // 这样copy就对了
+            System.out.println(dest); // [-1, 2, 0, 3, 4, 5, 20]
+            ```
+
+    + boolean replaceAll(List list, Object oldVal, Object newVal)：使用新值替换List对应元素的值
+
++ Collections类中提供了多个synchronizedXxx()方法，该方法**可将指定集合包装成线程同步的集合**，从而可以解决多线程并发访问集合时的线程安全问题
+    + 因此，并不会直接用Ventor或Hashtable，而是直接将ArrayList或HashMap放入Collections对应的synchronizedXxx()方法中，来实现线程同步
+    + 底层似乎就是将对应的方法用同步代码块包裹了一下
+
+
+
+
+
+## 数据结构
+
+![image-20201002205129180](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20201002205129180.png)
+
+![image-20201002205851562](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20201002205851562.png)
+
+![image-20201002210032044](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20201002210032044.png)
+
+![image-20201002211120443](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20201002211120443.png)
+
+![image-20201002211216444](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20201002211216444.png)
+
+![image-20201002211416627](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20201002211416627.png)
+
+
+
+
+
+## 泛型（Generic）
+
++ 所谓的泛型，就是允许在定义类、接口时通过一个标识表示类中某个属性的类型或者是某个方法的返回值及参数类型。
+    + 这个类型在使用时（例如，继承或实现这个接口，用这个类型声明变量、创建对象时）确定（即传入实际的类型参数，也称为类型实参）。
+
++ JDK1.5以后，Java引入了“参数化类型（Parameteried type）”概念，允许在创建集合时指定集合元素的类型，正如：`List<String>`，这表明该List只能保存字符串类型的对象
++ JDK1.5改写了集合框架中的全部接口和类，为这些接口、类增加了泛型支持，从而可以在声明集合变量、创建集合对象时传入类型实参。
+
+
+
+使用泛型时
+
++ 解决

@@ -184,9 +184,15 @@ public class SetTest {
         System.out.println(set); // [User{name='CC', age=101}, User{name='BB', age=101}]
 
         set.add(new User("CC", 101)); // 新加的这个与改动的那个具体哈希值不同
-        System.out.println(set); // [User{name='CC', age=101}, User{name='BB', age=101}, User{name='CC', age=101}]
+        // [User{name='CC', age=101}, User{name='BB', age=101}, User{name='CC', age=101}]
+        System.out.println(set);
 
-        set.add(new User("AA", 101)); // [User{name='CC', age=101}, User{name='BB', age=101}, User{name='CC', age=101}, User{name='AA', age=101}]
+
+        set.add(new User("AA", 101));
+        // [User{name='CC', age=101}, User{name='BB', age=101}, User{name='CC', age=101}, User{name='AA', age=101}]
+        // 这里是由于先比较哈希值，结果哈希值与第一个改成CC的User相同
+        // 接着再通过equals()比较二者具体的值，发现不同，就添加进去了
+
         System.out.println(set);
     }
 }
