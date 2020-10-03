@@ -4529,6 +4529,8 @@ jdk8中的HashMap的变化
 
 
 
+# Day36 2020/10/3
+
 ## 泛型（Generic）
 
 + 所谓的泛型，就是允许在定义类、接口时通过一个标识表示类中某个属性的类型或者是某个方法的返回值及参数类型。
@@ -4541,4 +4543,318 @@ jdk8中的HashMap的变化
 
 使用泛型时
 
-+ 解决
++ 集合接口或集合类在jdk5.0时都修改为带泛型的结构
++ 在实例化集合类时，可以指明具体的泛型类型
++ 指明完以后，在集合类或接口中凡是定义类或接口时，内部结构（比如：方法、构造器、属性等）使用到类的泛型的位置，都指定为实例化的泛型类型
+    + 比如：add(E e) ---> 实例化以后 add(Integer e)
++ 注意：泛型的类型必须是类，不能是基本数据类型，用到的话需要用包装类
++ 如果实例化时，没有这么泛型的类型，默认类型为java.lang.Object类型
+
+
+
+### 自定义泛型结构
+
+泛型类、泛型接口、泛型方法
+
++ 如果定义了泛型类，实例化没有指明类的泛型，则认为此泛型类型为Object类型
++ 要求：如果定义了类是带泛型的，建议在实例化时要指明类的泛型
++ 后边尖括号内的类型可省，但是确定使用泛型时，前面的不可以省
+
+```java
+class SubOrder extends Order<Integer>{
+    // 这里指明基础时用什么类型，因此在实例化时就不需要再指明了
+}
+
+class SubOrder1<T> extends Order<T>{
+    // 保留泛型，这是实例化就需要指明类型了
+}
+```
+
+#### 泛型类
+
++ 泛型类可能有多个参数，此时应将多个参数一起放在尖括号内。比如<E1, E2, E3>
+
++ 泛型类的构造器如下
+
+    + 正确：public GenericClass(){}
+    + 错误：public GenericClass<E>(){}
+
++ 实例化后，操作原来泛型位置的结构必须与指定的泛型类型一致
+
++ 泛型不同的引用不能相互赋值
+
+    + 尽管在编译时ArrayList<String>和ArrayList<Integer>是两种类型，但是，在运行时只有一个ArrayList被加载到JVM中
+
++ 泛型如果不指定，将被擦除，泛型对应的类型均按照Object处理，但不等价于Object
+
+    + 经验：泛型要使用一路都是。要不用，一路都不要用
+
++ 如果泛型类是一个接口或者抽象类，则不可窗口泛型类的对象
+
++ jdk1.7，泛型的简化操作：ArrayList<String> first = new ArrayList<>();
+
++ 泛型的指定中不能使用基本数据类型，可以使用包装类替换
+
++ 在类/接口上声明的泛型，在本类或本接口中即代表某种类型，可以作为非静态属性的类型、非静态方法的参数类型、非静态方法的返回值类型。
+
+    + **但是在静态方法中不能使用类的泛型**
+
++ 异常类不能是泛型的
+
++ 不能使用 new E[]。但是可以：E[] elements = (E[]) new Object[capacity];
+
+    + 参考：ArrayList源码中声明：Object[] elementData，而非泛型参数类型数组
+
++ 父类有泛型，子类可以选择保留泛型，也可以选择指定泛型类型
+
+    + 子类不保留父类的泛型：按需实现
+
+        + 没有类型	擦除
+        + 具体类型
+
+    + 子类保留父类的泛型：泛型子类
+
+        + 全部保留
+        + 部分保留
+
+    + **子类除了指定或保留父类的泛型，还可以增加自己的泛型**
+
+    + ```java
+        class Father<T1, T2>{
+        }
+        // 子类不保留父类的泛型 但子类可以自己添加自己的泛型
+        // 1. 没有类型，擦除
+        class Son extends Father{
+            // 等价于 class Son extends Father<Object, Object>{}
+        }
+        // 2. 具体类型
+        class Son2<A, B> extends Father<Integer, String>{
+        }
+        
+        // 子类保留父类的泛型 子类可以声明自己的泛型
+        // 1. 全部保留
+        class Son3<T1, T2> extends Father<T1, T2>{
+        }
+        
+        // 2. 部分保留
+        class Son4<T2> extends Father<Integer, T2>{
+        }
+        ```
+
+
+
+#### 泛型方法
+
+```java
+// 泛型方法：在方法中出现了泛型的结构，泛型参数与类的泛型参数没有任何关系
+// 换句话说，泛型方法所属的类是不是泛型类型都没有关系
+public <E> List<E> copyFromArrayToList(E[] arr){
+    // 必须要指明<E>才行，这是为了让编译器知道E不是类名
+    // 字母可以用别的，不过如果类也用了泛型，要注意区分开
+    ArrayList<E> list = new ArrayList<>();
+    for (E e : arr){
+        list.add(e);
+    }
+    return list;
+}
+```
+
+```java
+Integer[] arr = new Integer[]{1,2,3,4};
+// 泛型方法的调用
+List<Integer> list = order.copyFromArrayToList(arr);
+System.out.println(list);
+```
+
+另外，**泛型方法可以声明为静态方法**
+
+原因：泛型参数是在调用方法时确定的，并非在实例化类时确定的
+
+
+
+
+
+#### 什么时候会用到泛型类或泛型方法？
+
+DAO：data(base) access object 数据访问对象
+
+
+
+### 泛型在继承方面的体现
+
++ 类A是类B的父类，G<A> 和 G<B> 二者不具备子父类关系，二者是并列的
+    + 但，A<G> 是 B<G>的父类
+
+
+
+### 通配符的使用
+
+通配符：?
+
+类A 是 类B 的父类，G<A> 和 G<B> 二者不具备子父类关系，二者共同的父类是：G<?>
+
+
+
+#### 有限制的通配符
+
++ <?>：允许所有泛型的引用调用
++ 通配符指定上限
+    + 上限extends：使用时指定的类型必须是继承某个类，或者实现某个接口，即<=
++ 通配符指定下限
+    + 下限super：使用时指定的类型不能小于操作的类，即>=
++ 举例
+    + <? extends Number> (无穷小, Number]
+        + 只允许泛型为Number及Number子类的引用调用
+    + <? super Number>   [Number, 无穷大)
+        + 只允许泛型为Number及Number父类的引用调用
+    + <? extends Comparable>
+        + 只允许泛型为实现Comparable接口的实现类的引用调用
+
+
+
+
+
+## I/O流
+
+### File类的使用
+
++ java.io.File类：文件和文件目录路径的抽象表示形式，与平台无关
++ File能新建、删除、重命名文件和目录，但File不能访问文件内容本身。
+    + 如果需要访问文件内容本身，则需要使用输入/输出流
++ 想要在Java程序中表示一个真实存在的文件或目录，那么必须有一个File对象
+    + 但是Java程序中的一个File对象，可能没有一个真实存在的文件或目录
++ File对象可以作为参数传递给流的构造器
+
+
+
+#### 路径分隔符
+
++ 路径中的每级目录之间用一个**路径分隔符**隔开
++ 路径分隔符和系统有关
+    + windows和DOS系统默认使用“\”来表示
+    + UNIX和URL使用“/”来表示
++ Java程序支持跨平台运行，因此路径分隔符要慎用
++ 为了解决这个隐患，File类提供了一个常量
+    + public static fial String separator：根据操作系统，动态的提供分隔符
+    + 使用时，File.separator，即可
+
+
+
+```
+1.如何创建File类的实例
+        File(String filePath)
+        File(String parentPath, String childPath)
+        File(File parentFile, String childPath)
+2.相对路径
+        相较于某个路径下，指明的路径
+  绝对路径
+        包含盘符在内的文件或文件目录的路径
+```
+
+
+
+#### File类的获取功能
+
+```java
+File file = new File("hello.txt");
+File file2 = new File("F:\\Java基础学习和算法练习\\JavaBase\\test.txt");
+// 获取绝对路径
+System.out.println(file.getAbsoluteFile()); // F:\Java基础学习和算法练习\JavaBase\LearnJava\day36\hello.txt
+//  // 获取路径
+System.out.println(file.getPath()); // hello.txt
+// 获取名称
+System.out.println(file.getName()); // hello.txt
+//  // 获取上层文件目录路径，若无返回null
+System.out.println(file.getParent()); // 这里返回null，创建文件后还是null，说明这个还是基于相对路径的
+// 获取文件长度（即，字节数）。不能获取目录的长度
+System.out.println(file.length()); // 0 因为文件不存在，创建文件后 10 字节
+// 获取最后一次的修改时间，毫秒数（时间戳）
+System.out.println(file.lastModified()); // 0 因为文件不存在，创建文件后 1601730081561
+
+System.out.println();
+
+System.out.println(file2.getAbsoluteFile()); // F:\Java基础学习和算法练习\JavaBase\test.txt
+System.out.println(file2.getPath()); // F:\Java基础学习和算法练习\JavaBase\test.txt
+System.out.println(file2.getName()); // test.txt
+System.out.println(file2.getParent()); // F:\Java基础学习和算法练习\JavaBase
+System.out.println(file2.length()); // 0
+System.out.println(file2.lastModified()); // 0
+```
+
+```java
+File file = new File("F:\\Java基础学习和算法练习\\JavaBase");
+// 获取文件目录
+String[] list = file.list(); // 获取指定目录下所有文件或者文件目录的名称的数组
+System.out.println(Arrays.toString(list)); // [.git, .gitattributes, JavaLearn, Java基础.md, LearnJava, README.md]
+
+File[] files = file.listFiles(); // 获取指定目录下所有文件或者文件目录的File数组
+System.out.println(Arrays.toString(files)); // [F:\Java基础学习和算法练习\JavaBase\.git, F:\Java基础学习和算法练习\JavaBase\.gitattributes, F:\Java基础学习和算法练习\JavaBase\JavaLearn, F:\Java基础学习和算法练习\JavaBase\Java基础.md, F:\Java基础学习和算法练习\JavaBase\LearnJava, F:\Java基础学习和算法练习\JavaBase\README.md]
+```
+
+**renameTo(File dest)**
+
+```java
+// boolean renameTo(File dest)：把文件重命名，并移到指定的文件路径
+File file1 = new File("hello.txt");
+File file2 = new File("F:\\Java基础学习和算法练习\\test.txt");
+
+boolean b = file2.renameTo(file1);
+System.out.println(b); // 如果test.text文件存在，返回false；不存在则返回true
+```
+
+
+
+#### File类的判断功能
+
+```java
+File file1 = new File("hello.txt");
+File file2 = new File("F:\\Java基础学习和算法练习\\JavaBase");
+
+System.out.println(file1.isDirectory()); // 判断是否是文件目录
+System.out.println(file1.isFile()); // 判断是否是文件
+System.out.println(file1.exists()); // 判断是否存在
+System.out.println(file1.canRead()); // 判断是否可读
+System.out.println(file1.canWrite()); // 判断是否可写
+System.out.println(file1.isHidden()); // 判断是否隐藏
+
+System.out.println(file2.isDirectory()); // 判断是否是文件目录
+System.out.println(file2.isFile()); // 判断是否是文件
+System.out.println(file2.exists()); // 判断是否存在
+System.out.println(file2.canRead()); // 判断是否可读
+System.out.println(file2.canWrite()); // 判断是否可写
+System.out.println(file2.isHidden()); // 判断是否隐藏
+
+// 注意，当文件或路径不存在时，上面全返回false
+```
+
+#### File类的创建和删除功能
+
+```java
+File file1 = new File("hi.txt");
+if (!file1.exists()) {
+    file1.createNewFile(); // 创建文件，会返回boolean值
+    System.out.println("创建成功1");
+}else{
+    file1.delete(); // 删除文件 会返回boolean值
+    System.out.println("删除成功1"); // 注意，Java中的删除不走回收站
+}
+
+// 文件目录的创建
+File file2 = new File("F:\\Java基础学习和算法练习\\test");
+if (!file2.exists()) {
+    file2.mkdir(); // 创建文件夹。如果文件目录存在就不创建了，如果文件目录上层目录不存在就不创建了
+    System.out.println("创建成功2");
+}else{
+    file2.delete(); // 删除文件夹 会返回boolean值
+    System.out.println("删除成功2"); // 注意，Java中的删除不走回收站
+}
+
+File file3 = new File("F:\\Java基础学习和算法练习\\test2\\a");
+if (!file3.exists()) {
+    file3.mkdirs(); // 当文件目录上层文件不存在，一并创建
+    System.out.println("创建成功3");
+}else{
+    file3.delete(); // 删除文件夹 会返回boolean值
+    System.out.println("删除成功3"); // 注意，Java中的删除不走回收站
+}
+```
