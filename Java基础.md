@@ -4858,3 +4858,213 @@ if (!file3.exists()) {
     System.out.println("删除成功3"); // 注意，Java中的删除不走回收站
 }
 ```
+
+
+
+# Day37 2020/10/4
+
+## IO流原理及流的分类
+
++ I/O是Input/Output的缩写，I/O技术是非常实用的技术，**用于处理设备之间的数据传输**，如读/写文件，网络通讯等。
++ java程序中，对于数据输入/输出操作以“流（stream）”的方式进行
+
++ java.io包下提供了各种“流”类和接口，用以获取不同种类的数据，并通过标准的方法输入或输出数据
+
+
+
+**JavaIO原理**
+
++ 输入input：读取外部数据（磁盘、光盘等存储设备的数据）到程序（内存）中
++ 输出output：将程序（内存）数据输出到磁盘、光盘等存储设备中
+
+
+
+**流的分类**
+
++ 按操作**数据单位**不同分为：**字节流（8 bit）**，**字符流（16 bit）**
++ 按数据流的**流向**不同分为：**输入流**、**输出流**
++ 按流的**角色**的不同分为：**节点流**、**处理流**
+
+| 抽象基类   | 字节流       | 字符流 |
+| ---------- | ------------ | ------ |
+| **输入流** | InputStream  | Reader |
+| **输出流** | OutputStream | Writer |
+
++ Java的IO流共涉及40多个类，实际上非常规划，都是从这4个抽象基类派生的
++ 由这4个类派生出来的子类名称都是以其父类名作为子类名后缀
+
+![image-20201004123958237](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20201004123958237.png) 
+
+
+
+#### 
+
+#### FileReader和FileWriter的使用
+
+```
+1. read()的理解：返回读入的一个字符，如果达到文件末尾，返回-1
+2. 异常的处理，为了保证流资源一定可以执行关闭操作，需要使用try-catch-finally处理
+3. 读入的文件一定要存在，否则就会报 FileNotFoundException
+```
+
+```java
+		FileReader fr = null;
+        try {
+            // 1. File类的实例化
+            File file = new File("hello.txt");
+
+            // 2. FileReader流的实例化
+            fr = new FileReader(file);
+
+            // 3. 读入的操作
+            // read(char[] cbuf)：返回每次读入cbuf数组中的字符的个数，如果达到文件末尾，返回-1
+            char[] cbuf = new char[5];  // 每次读取字符的个数
+            int len;
+            while ((len = fr.read(cbuf)) != -1) {
+//                System.out.println(Arrays.toString(cbuf));
+                /*
+                [h, e, l, l, o]
+                [w, o, r, l, d]
+                [1, 2, 3, l, d]
+                 */
+                // 因此要想正确的读出读取的数据，应该
+//                for (int i = 0; i < len; i++) {
+//                    System.out.print(cbuf[i]);
+//                } // helloworld123
+
+//                String str = new String(cbuf); // 这样也不行
+//                System.out.println(str);
+                /*
+                hello
+                world
+                123ld
+                 */
+
+                String str = new String(cbuf, 0, len); // 这样就可以，只截取需要的
+                System.out.print(str); // helloworld123
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            // 4. 资源的关闭
+            try {
+                if(fr != null)
+                    fr.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+```
+
+```
+从内存中写出数据到硬盘的文件里
+说明：
+    1. 输出操作：对于的File可以不存在
+    2. File对应的硬盘中的文件如果不存在，在输出的过程中，会自动创建此文件
+       File对应的硬盘中的文件如果存在：
+                如果流使用的构造器是：FileWriter(file, false) / FileWriter(file)：对原有文件覆盖
+                如果流使用的构造器是：FileWriter(file, true)：不会覆盖原有文件，而是追加内容
+```
+
+
+
+#### FileInputStream 和 FileOutputStream的使用
+
+```
+* 结论：
+*      1. 对于文本文件（.txt, .java, .c, .cpp），使用字符流处理
+*      2. 对于非文本文件（.jpg, .mp3, .mp4, .avi, .doc, .ppt,...），使用字节流处理
+* 另外：
+*      1. 当文本文件不需要在内存层面读出来，只是复制，那么使用 字符流/字节流 都可以
+*      2. 但非文本文件使用，只能使用字节流复制，不能使用字符流复制
+
+```
+
+
+
+
+
+#### 处理流之一：缓冲流的使用
+
+```
+* 1。 缓冲流
+*      BufferedInputStream
+*      BufferOutputStream
+*      BufferedReader
+*      BufferedWroter
+*
+* 2、 作用：提高流的读取、写入的速度
+*     原因：内部提供了一个缓冲区
+*
+* 3， 处理流，就是“套接”在已有流的基础上
+* 4. 关闭资源
+*	  要求：先关闭外层的流，再关闭内层的流
+*	  说明：关闭外层的流的同时，内层流也会自动的进行关闭。因此，内层流的关闭代码，可以省略
+```
+
+
+
+#### 处理流之二：转换流的使用
+
++ 转换流提供了在字节流和字符流直接的转换
++ Java API提供了两个转换流
+    + InputStreamReader：将InputStream转换为Reader
+    + OutputStreamWriter：将Writer转换为OutputStream
++ 字节流中的数据都是字符时，转成字符流操作更高效
++ 很多时候使用转换流来处理文件乱码问题，实现编码和解码的功能
+
+
+
+简单的说，就是
+
++ 将输入的 字节流 转换为 字符流
+    + 就是输入时将， byte 转换成 char 
++ 将输出的 字符流 转换为 字节流
+    + 就是输出时将，char 转换成 byte
+
+
+
+#### **字符集**
+
++ ASCII：美国标准信息交换码
+    + 用一个字节的7位可以表示
++ ISO8859-1：拉丁码表。欧洲码表
+    + 用一个字节的8位表示
++ GB2312：中国的中文编码表。
+    + **最多**两个字节编码所有字符
++ GBK：中国的中文编码表升级，融合了更多的中文文字符号。
+    + **最多**两个字节编码
++ Unicode：国际标准码，融合了目前人类使用的所有字符。
+    + 为每个字符分配唯一的字符码。
+    + 所有的文字**都用**两个字节来表示
+    + Unicode不完美
+        + 英文字母只用一个字节表示就够了
+        + 如何区分Unicode和ASCII
+        + 用类似与GBK等双字节编码方式来表示一个字符，用最高位1或0表示两个字节和一个字节，就会少了很多值无法用于表示字符。不够表示所有字符
++ UTF-8：变长的编码方式
+    + 可用1-4个字节来表示一个字符
+        + 修正后的UTF-8编码中还可能需要6个字节
+    + 每次8个位传输数据
+    + 中文在UTF-8中占3个字节
+
+
+
+**字符编码**
+
++ ANSI编码，通常指的是平台的默认编码，例如英文操作系统中是ISO-8859-1，中文系统是GBK
++ Unicode字符集只是定义了字符的集合和唯一编号
++ Unicode编码，则是对UTF-8、UCS-2/UTF-16等具体编码方案的统称而已，并不是具体的编码方案
+
+
+
+
+
+## 标准输入流、输出流
+
++ System.in和System.out分别代表了系统标准的输入和输出设备
++ 默认输入设备是：键盘，输出设备是：显示器
++ System.in的类型是InputStream
++ System.out的类型是PrintStream，其实OutputStream的子类，FilterOutputStream的子类
++ 重定向：通过System类的setIn，setOut方法对默认设备进行改变
+    + public static void setIn(InputStream in)
+    + public static void setOut(PrintStream out)
