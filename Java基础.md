@@ -5068,3 +5068,257 @@ if (!file3.exists()) {
 + 重定向：通过System类的setIn，setOut方法对默认设备进行改变
     + public static void setIn(InputStream in)
     + public static void setOut(PrintStream out)
+
+
+
+# Day38 2020/10/5
+
+## 打印流
+
++ 实现将**基本数据类型**的数据格式转化为**字符串**输出
++ 打印流：**PrintStream（字节输出流）**和**PrintWriter（字符输出流）**
+    + 提供了一系列重载的print()和println()方法，用于多种数据类型的输出
+    + PrintStream和PrintWriter的输出不会抛出IOException异常
+    + PrintStream和PrintWriter有自动flush功能
+    + PrintStream打印的所有字符都使用平台的默认字符编码转换为字节
+        + 在需要写入字符而不是写入字节的情况下，应该使用PrintWriter类
+    + System.out返回的是PrintStream的实例
+
+
+
+## 数据流
+
++ 为了方便地操作Java语音的基本数据类型和String的数据，可以使用数据流
++ 数据流有两个类：（用于读取和写出基本数据类型、String类的数据）
+    + DataInputStream和DataOutputStream
+    + 分别“套接”在InputStream和OutputStream子类的流上
++ DataInputStream中的方法
+    + boolean readBoolean()
+    + byte readByte()
+    + char readChar()
+    + float readFloat()
+    + double readDouble()
+    + short readShort()
+    + long readLong()
+    + int readInt()
+    + String readUTF()
+    + void readFully(byte[] b)
++ DataOutputStream中的方法
+    + 将上述的方法的read改为相应的write即可。
+
++ 注意点：读取不同类型的数据的顺序要与当初写入文件时，保存的数据的顺序一致
+    + 读（得按写的顺序读）
+
+
+
+## 对象流
+
++ ObjectInputStream和ObjectOutputStream
++ 用于存储和读取**基本数据类型**数据或**对象**的处理流。
+    + 它的强大之处就是可以把Java中的对象写入到数据源中，也能把对象从数据源中还原回来
++ **序列化**：用ObjectOutputStream类**保存**基本类型数据或对象的机制
++ **反序列化**：用ObjectInputStream类**读取**基本类型数据或对象的机制
+
++ ObjectOutputStream和ObjectInputStream不能序列化**static**和**transient**修饰的**成员变量**
+
+
+
+### 对象的序列化机制
+
++ 对象的序列化机制允许**把内存中的Java对象转换成平台无关的二进制流**，从而允许**把这种二进制流持久化地保存在磁盘上**，或**通过网络将这种二进制流传输到另一个网络节点**。
+    + 当其他程序获取了这种二进制流，就可以恢复成原来的Java对象
++ 序列化的好处在于可将任何实现了Serializable接口的对象转换为**字节数据**，使其在保存和传输时可被还原
++ 序列化是RMI（Remote Method Invoke - 远程方法调用）过程的参数和返回值都必须实现的机制，而RMI是JavaEE的基础，因此序列化机制是JavaEE平台的基础
++ 如果需要让某个对象支持序列化机制，则必须让对象所属的类及其属性是可序列化的，为了让某个类是可序列化的，该类必须实现如下两个接口之一。否则，会抛出**NotSerializableException**异常
+    + **Serializable**
+    + Externalizable
++ 凡是实现Serializable接口的类都有一个标识序列化版本标识符的静态变量
+    + private static final long serialVersionUID;
+    + serialVersionUID用来表明类的不同版本间的兼容性。简言之，其目的是**以序列化对象进行版本控制，有关各版本反序列化时是否兼容**
+    + 如果类没有显式定义这个静态变量，它的值是Java运行时环境根据类的内部细节自动生成的，若类的实例变量做了修改，serialVersionUID可能发生变化。故建议，显式声明
++ 简单来说，Java的序列化机制是通过在运行时判断类的serialVersionUID来验证版本一致性的，
+    + 在进行反序列化时，**JVM会把传来的字节流**中的serialVersionUID 与**本地相应**实体类的serialVersionUID进行比较
+        + 如果相同就认为是一致的，可以进行反序列化
+        + 否则就会出现序列化版本不一致的异常（InvalidCastException）
+
+
+
+```
+要想Person类支持序列化机制，
+    1. 需要实现Serializable接口（这是个标识接口）
+    2. 当前类提供一个全局常量：serualVersionUID
+    3. 除了当前Person类需要实现Serializable接口之外，还必须保证其内部所有属性也必须是可序列号的
+        （默认情况下，基本数据类型可序列化）
+```
+
+
+
+
+
+## 随机存取文件流
+
+### RandomAccessFile类
+
++ RandomAccessFile声明在java.io包下，但直接继承于java.lang.Object类
+    + 并且它实现了DataInput、DataOutput这两个接口，也就意味着这个类既可以读也可以写
++ RandomAccessFile类支持“随机访问”的方式，**程序可以直接跳到文件的任意地方来读、写文件**
+    + 支持只访问文件的部分内容
+    + 可以向已存在的文件后追加内容
++ RandomAccessFile对象包含一个记录指针，用以标示当前读写处的位置
+    + RandomAccessFile类对象可以自由移动记录指针
+        + long getFilePointer()：获取文件记录指针的当前位置
+        + void seek(long pos)：将文件记录指针定位到pos位置
+
++ 构造器
+    + public RandomAccessFile(File file, String mode)
+    + public RandomAccessFile(String name, String mode)
++ 创建RandomAccessFile类实例需要指定一个mode参数，该参数指定RandomAccessFile的访问模式
+    + r：以只读方式打开
+    + rw：打开以便读取和写入
+    + rwd：打开以便读取和写入；同步文件内容的更新
+    + rws：打开以便读取和写入；同步文件内容和元数据的更新
++ 如果模式为只读r。则不会创建文件，而是会去读取一个已经存在的文件
+    + 如果读取的文件不存在，则会出行异常
++ 如果模式为rw读写。
+    + 如果文件不存在则会去创建文件
+    + 如果存在则不会创建
+
+
+
+可以用RandomAccessFile类，来实现一个**多线程断点下载**的功能
+
++ **下载前**会建立**两个临时文件**
+    + 一个是与被下载文件大小相同的空文件
+    + 另一个是记录文件指针的位置文件
++ 每次暂停的时候，都会保存上一次的指针，然后断点下载的时候，会继续从上一次的地方下载，从而实现断点下载或上传的功能
+
+
+
+## NIO.2中Path、Paths、Files类的使用
+
+## Java NIO概述
+
++ Java NIO（New IO，Non-Blocking IO）是java1.4引入的一套新的IO API，可以替代标准的Java IO API。
++ NIO与原来的IO有同样的作用和目的，但是使用的方式完全不同
+    + NIO支持**面向缓冲区**的（IO是**面向流**的）、基于通道的IO操作
+    + NIO将以更加高效的方式进行文件的读写操作
++ Java API中提高了两套NIO
+    + 一套是**针对标准输入输出NIO**
+    + 另一套是**网络编程NIO**
+        + java.nio.channels.Channel
+            + FileChannel：处理本地文件
+            + SocketChannel：TCP网络编程的客户端的Channel
+            + ServerSocketChannel：TCP网络编程的服务器端的Channel
+            + DatagramChannel：UDP网络编程中发送端和接收端的Channel
+
+
+
+### NIO.2
+
++ 随着JDK7的发布，Java对NIO进行了极大的扩展，增强了对文件处理和文件系统特性的支持，以至于称他为NIO.2
++ 因为NIO提供的一些功能，NIO已经成为文件处理中越来越重要的部分
+
+
+
+### Path、Paths和Files核心API
+
++ 早期的Java只提供了一个File类来访问文件系统，但File类的功能比较有限，所提供的方法性能也不高
+
+    + 而且，大多数方法在出错时仅返回失败，并不会提供异常信息（比如说renameTo()方法，错误是返回false，而不是抛异常）
+
++ NIO.2为了弥补这种不足，引入了Path接口，代表一个平台无关的平台路径，描述了目录结构中文件的位置
+
+    + Path可以看成是File类的升级版本，**实际引用的资源也可以不存在**
+
++ 在以前IO操作是这样写的
+
+    + ```java
+        import java.io.File;
+        File file = new File("index.html");
+        ```
+
++ 在Java7中，可以这样写
+
+    + ```java
+        import java.nio.file.Path;
+        import java.nio.file.Paths;
+        Path path = Paths.get("index.html");
+        ```
+
++ 同时，NIO.2在java.nio.file包下还提供了Files、Paths工具类
+
+    + Files包含了大量静态的工具方法来操作文件
+    + Paths则包含了两个返回Path的静态工厂方法
+
++ Paths类提供的静态get()方法用来获取Path对象
+
+    + static Path get(String first, String ... more)：用于将多个字符串串联成路径
+    + static Path get(URI uri)：返回指定uri对应的Path路径
+
+
+
+## 网络编程
+
++ Java提供的网络类库，可以实现无痛的网络连接，联网的底层细节被隐藏在Java的本机安装系统里，由JVM进行控制。并且Java实现了一个跨平台的网络库，程序员面对的是一个统一的网络编程环境
+
+
+
+网络编程中有两个主要的问题：
+
++ 如何准确地定位网络上一台或多台主机：定位主机上的特定的应用
++ 找到主机后如何可靠高效地进行数据传输
+
+
+
+#### 如何实现网络中的主机互相通信
+
++ 通信双方地址
+    + IP
+    + 端口号
+        + 不同进程有不同的端口号
+        + 被规定为一个16位的整数 0~65535
+        + 端口分类
+            + 公认端口：0~1023。被预定义的服务通信占用
+                + 如：HTTP占用端口80，FTP占用端口21，Telnet占用端口23
+            + 注册端口：1024~49151。分配给用户进程或应用程序。
+                + 如：Tomcat占用端口8080，MySQL占用端口3306，Oracle占用端口1521等
+                    + 这些服务的端口大多都可以自己修改
+            + 动态/私有端口：49152~65535
+    + 端口号和IP地址的组合得出一个网络套接字：Socket
++ 一定的规则（即：网络通信协议，有两套参考模型）
+    + OSI参考模型：模型过于理想化，未能在因特网上进行广泛推广
+    + TCP/IP参考模型（或TCP/IP协议）：事实上的国际标准
+
+
+
+#### TCP和UDP协议
+
+传输层协议中有两个非常重要的协议
+
++ 传输控制协议TCP
++ 用户数据报协议UDP
+
+TCP/IP包含两个主要协议：传输控制协议（TCP）和网络互联协议（IP）
+
++ IP（Internet Protocol）协议是网络层的主要协议，支持网间互连的数据通信
++ TCP/IP协议模型从更实用的角度出发，形成了高高效的四层体系结构，即物理链路层、IP层、传输层和应用层
+
+
+
+**TCP协议**：
+
++ 使用TCP协议前，须先建立TCP连接，形成传输数据通道
++ 传输前，采用“”**三次握手**“方式，点对点通信，是**可靠的**
++ TCP协议进行通信的两个应用进程：客户端、服务端
++ 在连接中可进行大数据量的传输
++ 传输完毕，要释放已建立的连接，效率低
+
+
+
+**UDP协议：**
+
++ 将数据、源、目的封装成数据包，不需要建立连接
++ 每个数据报的大小限制在**64K内**
++ 发送不管对方是否准备好，接收方收到也不确认，故是**不可靠的**
++ 可以广播发送
++ 发送数据结束时无需释放资源，开销小，速度快
