@@ -5255,6 +5255,12 @@ if (!file3.exists()) {
     + static Path get(String first, String ... more)：用于将多个字符串串联成路径
     + static Path get(URI uri)：返回指定uri对应的Path路径
 
+![image-20201006145733030](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20201006145733030.png)
+
+![image-20201006145817850](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20201006145817850.png)
+
+![image-20201006145901345](C:\Users\Jarvis\AppData\Roaming\Typora\typora-user-images\image-20201006145901345.png)
+
 
 
 ## 网络编程
@@ -5322,3 +5328,241 @@ TCP/IP包含两个主要协议：传输控制协议（TCP）和网络互联协�
 + 发送不管对方是否准备好，接收方收到也不确认，故是**不可靠的**
 + 可以广播发送
 + 发送数据结束时无需释放资源，开销小，速度快
+
+
+
+# Day39 2020/10/6
+
+## UDP网络通信
+
++ 类DatagramSocket和DatagramPacket实现了基于UDP协议网络程序
++ UDP数据报通过数据报套接字DatagramSocket发送和接收，系统不保证UDP数据报一定能够安全送到目的地，也不能确定什么时候可以抵达
++ DatagramPacket对象封装了UDP数据报，在数据报中包含了发送端的IP地址和端口号以及接收端的IP地址和端口号
++ UDP协议中每个数据报都给出了完整的地址信息，因此无须建立发送方和接收方的连接
+
+
+
+## URL编程
+
++ URL（Uniform Resource Locator）：统一资源定位符，它表示Internet上**某一资源**的地址
++ 它是一个具体的URI，即URL可以用来标识一个资源，而且还指明了如何locate（定位）这个资源
++ 通过URL可以访问Internet上各种网络资源，比如最常见的www，ftp站点。
+    + 浏览器通过解析给定的URL可以在网络上查找相应的文件或其他资源
++ URL的基本结构由5部分组成
+    + <传输协议>://<主机名>:<端口号>/<文件名>#片段名?参数列表
+    + 例如：http://localhost:8080/examples/gakki.png?username=Tom&age=18
+    + #片段名：即锚点
+    + 参数列表格式：参数名=参数值&参数名=参数值
+
+
+
+## Java反射（Reflection）机制
+
++ Reflection（反射）是被视为**动态语言**的关键，反射机制允许程序在执行期借助于Reflection API**取得任何类的内部信息**，并**能直接操作任意对象的内部属性及方法**
+
++ 加载完类之后，在**堆内存的方法区**中就产生了一个**Class类型的对象**（**一个类只有一个Class对象**），这个对象就包含了完整的类的结构信息
+    + 可以通过这个对象看到类的结构
+    + 这个对象就像一面镜子，透过这个镜子看到类的结构，所以形象的称之为：**反射**
+
++ 正常方式：
+    + 引入需要的“包类”名称
+    + 通过new实例化
+    + 取得实例化对象
++ 反射方式：
+    + 实例化对象
+    + getClass()方法
+    + 得到完整的“包类”名称
+
+
+
+#### 动态语言 vs 静态语言
+
++ 动态语言
+    + 是一类在运行时可以改变其结构的语言：例如新的函数、对象、甚至代码可以被引进，已有的函数可以被删除或是其他结构上的变化
+    + 通俗点就是**在运行时代码可以根据某些条件改变自身结构**
+    + 主要动态语言：Object-C、C#、JavaScript、PHP、Python、Erlang
++ 静态语言
+    + 与动态语言相对应的，**运行时结构不可变的语音就是静态语言**。如Java、C、C++
+
+
+
+Java不是动态语言，但Java可以称之为“**准动态语言**”。
+
++ Java具有一定的动态性，**可以利用反射机制、字节码操作获得类似动态语言的特性**
++ Java的动态性让编程的时候更加灵活
+
+
+
+### Java反射机制提供的功能
+
++ 在运行时判断任意一个对象所属的类
++ 在运行时构造任意一个类的对象
++ 在运行时判断任意一个类所具有的成员变量和方法
++ 在运行时获取泛型信息
++ 在运行时调用任意一个对象的成员变量和方法
++ 在运行时处理注解
++ 生成动态代理
+
+
+
+### 反射相关的主要API
+
++ **java.lang.Class**：代表一个类
++ java.lang.reflect.Method：代表类的方法
++ java.lang.reflect.Field：代表类的成员变量
++ java.lang.reflect.Constructor：代表类的构造器
++ ......
+
+```
+疑问：通过直接new的方式或反射的方式都可以调用公共的结构，开发中用哪个？
+    建议：直接new的方式
+    什么时候会用：反射的方式。
+    反射的特征：动态性
+疑问：反射机制与面向对象中的封装性是不是矛盾的？如何看待两个技术？
+    不矛盾。
+    通俗地讲，封装性就是一种规范，告诉你什么应该凋什么不应该凋，就是建议怎么调用的事
+            而反射则是，能不能调用的事
+```
+
+#### Class类的理解
+
++ 类的加载过程：
+    + 程序经过javac.exe命令后，会生成一个或多个字节码文件（.class结尾）（这一行不是类加载的过程）
+    + 接着使用java.exe命令对某个字节码文件进行解释运行（应该是包含main方法的那个字节码文件）
+    + 相当于将某个字节码文件加载到内存中
+    + 此过程就称为类的加载。**加载到内存中的类，就称为运行时类。**
+        + 此运行时类，就作为Class的一个实例
+        + 换句话说，**Class的实例就对应着一个运行时类**
+
++ 加载到内存中的  运行时类  会缓存一定的时间，在此时间内，可以通过不同的方式来获取此运行时类
+
+
+
+```
+        // 获取Class的实例的方式
+        // 方式一：调用运行时类的属性：.class
+        Class<Person> clazz1 = Person.class; // 可以加上泛型，效果一样，加上的话后面就不用强转了
+        System.out.println(clazz1); // class com.example.java.Person
+
+        // 方式二：通过运行时类的对象，调用getClass()
+        Person p1 = new Person();
+        Class clazz2 = p1.getClass();
+        System.out.println(clazz2); // class com.example.java.Person
+
+        // 方式三：调用Class的静态方法：forName(String classPath)   （用方式三居多）
+        Class clazz3 = Class.forName("com.example.java.Person");
+//        clazz3 = Class.forName("java.lang.String");
+        System.out.println(clazz3); // class com.example.java.Person
+
+        // 加载到内存中的  运行时类  会缓存一定的时间，在此时间内，可以通过不同的方式来获取此运行时类
+        System.out.println(clazz1 == clazz2); // true
+        System.out.println(clazz1 == clazz3); // true
+        System.out.println(clazz2 == clazz3); // true
+
+
+        // 前三种方式需要掌握
+        // 方式四：使用类的加载器：ClassLoader （了解）
+        ClassLoader classLoader = ReflectionTest.class.getClassLoader();
+        Class clazz4 = classLoader.loadClass("com.example.java.Person");
+        System.out.println(clazz4);
+        System.out.println(clazz1 == clazz4); // true
+```
+
+
+
+#### 哪些类型可以有Class对象
+
++ class：外部类，成员（成员内部类，静态内部类），局部内部类，匿名内部类
+
+    + 包括Class本身
+
++ interface：接口
+
++ []：数组
+
+    + ```java
+        int[] a = new int[10];
+        int[] b = new int[100];
+        Class ca = a.getClass();
+        Class cb = b.getClass();
+        System.out.println(ca == cb);
+        ```
+
+    + 只要数组的元素类型与纬度一样，就是同一个Class
+
++ enum：枚举
+
++ annotation：注解@interface
+
++ primitive type：基本数据类型
+
++ void
+
+    
+
+
+
+#### 类的加载过程
+
+当程序主动使用某个类时，如果该类还未被加载到内存中，则系统会通过如下三步来对该类进行初始化
+
++ 类的加载（Load）
+
+    + 将类的class文件读入内存，并将这些**静态数据转换成方法区的运行时数据结构**，
+    + 然后生成一个代表这个类的java.lang.Class对象，作为方法区中类数据的访问入口（即引用地址）
+    + 所有需要访问和使用类数据只能通过这个Class对象
+    + 此过程由类加载器完成
+
++ 类的链接（Link）
+
+    + 将类的二进制数据合并到JVM的运行状态之中的过程
+    + 验证：确保加载的类信息符合JVM规范，例如：以cafe开头，没有安全方面的问题
+    + 准备：正式为类变量（static）分配内存并**设置类变量默认初始值（比如int为0，引用型的为null）**的阶段，这些内存都将在方法区中进行分配
+    + 解析：虚拟机常量池内的符号引用（常量名）替换为直接引用（地址）的过程
+
++ 类的初始化（Initialize）
+
+    + 执行**类构造器<clinit>()**方法的过程。**类构造器<clinit>()方法是由编译期自动收集类中所有类变量的赋值动作和静态代码块中的语句合并产生的**。（类构造是构造类信息的，不是构造该类对象的构造器）
+    + 当初始化一个类的时候，如果发现其父类还没有进行初始化，**则需要先触发其父类的初始化**
+
+    + 虚拟机会保证一个类的<clinit>()方法在多线程环境中被正确加锁和同步
+
+
+
+```
+    @Test
+    public void ClassLoadingTest(){
+        System.out.println(A.m); // 100
+    }
+}
+
+class A{
+    static {
+        m = 300;
+    }
+    // 静态代码块和显示赋值就是个谁先谁后的关系
+    static int m = 100;
+}
+/*
+1. 类的加载，将类A加载到内存中
+2. 链接结束后 m=0
+3. 初始化后，m的值由<clinit>()方法执行决定
+    这个A的类构造器<clinit>()方法由类变量的赋值和静态代码块中的语句按照顺序合并产生
+    类似于
+        <clinit>(){
+            m = 300;
+            m = 100;
+        }
+ */
+```
+
+
+
+源程序(\*.java文件 )-->Java编译器-->字节码(\*.class文件)-->类装载器 --> 字节码校验器 -->解释器 --> 操作系统平台
+
+
+
+#### 类加载器的作用
+
++ 类加载的作用：将class文件字节码内存加载到内存中，并将这些静态数据转换成方法区的运行时数据结构，然后在堆中生成一个代表这个类的java.lang.Class对象，作为方法区中类数据的访问入口
++ 类缓存：标准的JavaSE类加载器可以按要求查找类，但一旦某个类被加载到类加载器中，它将维持加载（缓存）一段时间。不过JVM垃圾回收机制可以回收这些Class对象。
