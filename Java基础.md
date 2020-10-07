@@ -5564,5 +5564,143 @@ class A{
 
 #### 类加载器的作用
 
-+ 类加载的作用：将class文件字节码内存加载到内存中，并将这些静态数据转换成方法区的运行时数据结构，然后在堆中生成一个代表这个类的java.lang.Class对象，作为方法区中类数据的访问入口
++ 类加载的作用：将class文件字节码内存加载到内存中，并**将这些静态数据转换成方法区的运行时数据结构**，然后在**堆**中生成一个代表这个类的java.lang.Class对象，**作为方法区中类数据的访问入口**
 + 类缓存：标准的JavaSE类加载器可以按要求查找类，但一旦某个类被加载到类加载器中，它将维持加载（缓存）一段时间。不过JVM垃圾回收机制可以回收这些Class对象。
+
+
+
+# Day40 2020/10/7
+
+## ClassLoader
+
+类加载器作用是用来把类（class）装载进内存的，JVM规范定义了如下类型的类的加载器
+
++ **引导类加载器**：用C++编写的，是JVM自带的类加载器，**负责Java平台核心库**，用来装载核心类库，该加载器无法直接获取
++ **扩展类加载器**：负责jre/lib/ext目录下的jar包或-D java.ext.dirs指定目录下的jar包装入工作库
++ **系统类加载器**：负责java -classpath 或 -D java.class.path所指的目录下的类与jar包装入工作，是最常用的加载器
+
+```java
+// 对于自定义类，使用系统类加载器进行加载
+ClassLoader classLoader = ClassLoaderTest.class.getClassLoader();
+System.out.println(classLoader); // sun.misc.Launcher$AppClassLoader@18b4aac2 系统加载器
+// 调用系统类加载的getParent()：获取扩展类加载器
+ClassLoader classLoader1 = classLoader.getParent();
+System.out.println(classLoader1); // sun.misc.Launcher$ExtClassLoader@23fc625e 扩展类加载器
+// 调用扩展类加载器的getParent()：无法获取引导类加载器
+// 引导类加载器主要负责加载java的核心类库，无法加载自定义类的
+ClassLoader classLoader2 = classLoader1.getParent();
+System.out.println(classLoader2); // null 无法主动获取到引导类加载器
+
+ClassLoader classLoader3 = String.class.getClassLoader();
+System.out.println(classLoader3); // null
+```
+
+```java
+ /*
+    Properties：用来读取配置文件
+     */
+    @Test
+    public void test2() throws IOException {
+
+        Properties pros = new Properties();
+        // 测试的文件默认在当前的module下
+        // 读取配置文件的方式一：
+//        FileInputStream fis = new FileInputStream("jdbc.properties");
+//        pros.load(fis);
+
+        // 读取配置文件的方式二：使用ClassLoader
+        // 配置文件默认识别为，当前module的src下
+        ClassLoader classLoader = ClassLoaderTest.class.getClassLoader();
+        InputStream is = classLoader.getResourceAsStream("jdbc1.properties"); // 这时默认是在src目录下
+        pros.load(is);
+
+        String name = pros.getProperty("name");
+        int age = Integer.parseInt(pros.getProperty("age"));
+        System.out.println(name + " : " + age);
+
+        is.close();
+    }
+```
+
+
+
+### 创建运行时类的对象
+
+```
+/*
+newInstance()：调用此方法，创建对应的运行时类的对象。内部调用了运行时类的空参构造器
+
+要想此方法正常的创建运行时类的对象，要求：
+    1. 运行时类必须提供空参的构造器
+    2. 空参的构造器的访问权限得够。通常，设置为public
+
+在javabean中要求提供一个public的空参构造器。原因：
+    1. 便于通过反射，创建运行时类的对象
+    2. 便于子类继承此运行时类时，默认调用super()时，保证父类有此构造器
+ */
+```
+
+```java
+// 体现反射的动态性
+    @Test
+    public void test2(){
+        int num = new Random().nextInt(3); // 0,1,2
+        String classPath = "";
+        switch (num){
+            case 0:
+                classPath = "java.util.Date";
+                break;
+            case 1:
+//                classPath = "java.sql.Date"; // java.sql.Date类没有空参构造器，故这里会抛异常
+                classPath = "java.lang.Object";
+                break;
+            case 2:
+                classPath = "com.example.java.Person";
+                break;
+        }
+        try {
+            Object obj = getInstance(classPath);
+            System.out.println(obj);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public Object getInstance(String classPath) throws Exception{
+        Class clazz = Class.forName(classPath);
+        return clazz.newInstance();
+    }
+```
+
+
+
+### 获取运行时类中的指定结构
+
+见代码。
+
+
+
+### 调用运行时类的指定结构
+
+见代码。
+
+
+
+## 动态代理（反射的应用）
+
++ 代理设计模式的原理
+    + 使用一个代理将对象包装起来，然后用该代理对象取代原始对象。
+    + 任何对原始对象的调用都要通过代理
+    + 代理对象决定是否以及何时将方法调用转到原始对象上
++ 静态代理，特征是**代理类和目标对象的类都是在编译期间确定下来**，不利于程序的扩展
+    + 同时，**每一个代理类只能为一个接口服务**，这样一来程序开发中必然产生过多的代理
+    + **最好可以通过一个代理类完成全部的代理功能**
+
++ 动态代理是指客户通过代理类来调用其他对象的方法，并且使在程序运行时根据需要动态创建目标类的代理对象
+    + 动态代理使用场合
+        + 调试
+        + 远程方法调用
++ 动态代理相比于静态代理的优点
+    + 抽象角色中（接口）声明的所有方法都被转义到调用处理器一个集中的方法中处理
+    + 这样，可以更加灵活和统一的处理众多的方法
