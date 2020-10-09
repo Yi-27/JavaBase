@@ -1,6 +1,4 @@
-
-
-#  Day1		2020/6/5
+Day1		2020/6/5
 
 + Java仍然会存在内存泄漏和溢出的问题。
 
@@ -5915,17 +5913,6 @@ Lambda是一个匿名函数，可以理解为一段可以传递的代码（将�
 
     + 而在终止操作时一次性全部处理，称为“**惰性求值**”。
 
-        + 筛选与切片
-
-            + | 方法                | 描述                                                         |
-                | ------------------- | ------------------------------------------------------------ |
-                | filter(Predicate p) | 接收Lambda，从流中排除某些元素                               |
-                | distinct()          | 筛选，通过流所生成元素的hashCode()和equals()去除重复元素     |
-                | limit(long maxSize) | 截断流，使其元素不超过给定数量                               |
-                | skip(long n)        | 跳过元素，返回一个扔掉了前n个元素的流。若流中元素不足n个，则返回一个空流。与limit(n)互补 |
-
-            
-
 + 终止操作（终端操作）
 
     + 一旦执行终止操作，**就执行中间操作链**，并产生结果。
@@ -5933,3 +5920,119 @@ Lambda是一个匿名函数，可以理解为一段可以传递的代码（将�
 
 
 
+# Day42 2020/10/9
+
+## Stream API中间操作
+
++ 筛选与切片
+    + | 方法                | 描述                                                         |
+        | ------------------- | ------------------------------------------------------------ |
+        | filter(Predicate p) | 接收Lambda，从流中排除某些元素                               |
+        | distinct()          | 筛选，通过流所生成元素的hashCode()和equals()去除重复元素     |
+        | limit(long maxSize) | 截断流，使其元素不超过给定数量                               |
+        | skip(long n)        | 跳过元素，返回一个扔掉了前n个元素的流。若流中元素不足n个，则返回一个空流。与limit(n)互补 |
+
++ 映射
+    + | 方法                | 描述                                                         |
+        | ------------------- | ------------------------------------------------------------ |
+        | map(Function f)     | 接收一个函数作为参数，将元素转换成其他形式或提取信息，该函数会被应用到每个元素上，并将其映射成一个新的元素 |
+        | flatMap(Function f) | 接收一个函数作为参数，将流中的每个值都换成另一个流，然后把所有流连接成一个流 |
+
++ 排序
+
+    + | 方法                   | 描述                               |
+        | ---------------------- | ---------------------------------- |
+        | sorted()               | 产生一个新流，其中按自然顺序排序   |
+        | sorted(Comparator com) | 产生一个新流，其中按比较器顺序排序 |
+
+
+
+Stream终止操作
+
++ 终端操作会从流的流水线生成结果。其结果可以时任何不是流的值，例如List、Integer、甚至是void
+
++ 匹配与查找
+
+    + | 方法                   | 描述                                                         |
+        | ---------------------- | ------------------------------------------------------------ |
+        | allMatch(Predicate p)  | 检查是否匹配所有元素                                         |
+        | anyMatch(Predicate p)  | 检查是否至少匹配一个元素                                     |
+        | noneMatch(Predicate p) | 检查是否没有匹配所有元素                                     |
+        | findFirst()            | 返回第一个元素                                               |
+        | findAny()              | 返回当前流中的任意元素                                       |
+        | count()                | 返回流中元素总数                                             |
+        | max(Comparator c)      | 返回流中最大值                                               |
+        | min(Comparator c)      | 返回流中最小值                                               |
+        | forEach(Consumer c)    | **内部迭代**（使用Collection接口需要用户去做迭代，称为**外部迭代**。相反，StreamAPI使用内部迭代——它帮我们把迭代做了） |
+
++ 规约
+
+    + | 方法                             | 描述                                                      |
+        | -------------------------------- | --------------------------------------------------------- |
+        | reduce(T iden, BinaryOperator b) | 可以将流中元素反复结合起来，得到一个值，返回T             |
+        | reduce(BinaryOperator b)         | 可以将流中元素反复结合起来，得到一个值，返回Optional\<T\> |
+
++ 收集
+
+    + | 方法                 | 描述                                                         |
+        | -------------------- | ------------------------------------------------------------ |
+        | collect(Collector c) | 将流转换为其他形式。接收一个Collector接口的实现，用于给Stream中元素做汇总的方法 |
+
+    + Collector接口中方法的实现决定了如何对流执行收集的操作（如收集到List、Set、Map）
+
+    + 另外，Collectors实用类提供了很多静态方法，可以方便地创建常见收集器实例
+
+        + toList
+        + toSet
+        + toCollection
+        + Long counting：计算流中元素的个数
+        + Integer summingInt：对流中元素的整数属性求和
+        + Double averagIngInt：计算流中元素Integer属性的平均值
+        + IntSummaryStatistics summarizingInt：收集流中Integer属性的统计值。如：平均值
+        + String joining：连接流中每个字符串
+        + Optional\<T\> maxBy：根据比较器选择最大值
+        + Option\<T\> minBy：根据比较器选择最小值
+        + 归约产生的类型 reducing：从一个作为累加器的初始值开始，利用BinaryOperator与流中元素逐个结合，从而归约成单个值
+        + 转换函数返回的类型 collectingAndThen：包裹另一个收集器，对其结果转换函数
+        + Map<K, List\<T\>> groupingBy：根据某属性值对流分组，属性为K，结果为V
+        + Map<Boolean, List\<T\>> partitioningBy：根据true或false进行分区
+
+
+
+# Optional类
+
+受Google Guava的启发，Optional类成为Java 8类库的一部分
+
++ Optional\<T\>类（java.util.Optional）是一个容器类，它可以保存类型T的值，代表这个值存在
+    + 或者仅仅保存null，表示这个值不存在。
+    + 原来用null表示一个值不存在，现在Optional可以更好的表达这个概念
+    + 并且可以避免空指针异常
++ Optional类的Javadoc描述如下：这是一个可以为null的容器对象。如果值存在则isPresent()方法会返回true，调用get()方法会返回该对象
+
++ Optional提供很多有用的方法，这样就不用显式进行空值检测
+    + 创建Optional类对象的方法
+        + Optional.of(T t)：创建一个Optional实例，t必须非空
+        + Optional.empty()：创建一个空的Optional实例
+        + Optional.ofNullable(T t)：t 可以为null
+    + 判断Optional容器中是否包含对象
+        + boolean isPresent()：判断是否包含对象
+        + void ifPresent(Consumer<? super T> consumer)：如果有值，就执行Consumer接口的实现代码，并且该值会作为参数传给它
+    + 获取Optional容器的对象
+        + T get()：如果调用对象包含值，返回该值，否则抛异常
+        + T orElse(T other)：如果有值则将其返回，否则返回指定的other对象
+        + T orElseGet(Supplier<? extends T> other)：如果有值则将其返回，否则返回由Supplier接口实现提供的对象
+        + T orElseThrow(Supplier<? extends X>exceptionSupplier)：如果有值则将其返回，否则抛出由Supplier接口实现提供的异常
+
+
+
+
+
+# Java9新特性
+
+# Java10新特性
+
+# Java11新特性
+
+# Java12新特性
+
+# Java13新特性
